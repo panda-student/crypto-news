@@ -56,7 +56,8 @@ if ($LASTEXITCODE -ne 0) {
     throw '无法设置 release 的正常用户完整性级别，未导出安装包。'
 }
 
-$destination = Join-Path $releaseDirectory $installer.Name
+$outputName = "CryptoNews_$($config.version)_x64-setup.exe"
+$destination = Join-Path $releaseDirectory $outputName
 Copy-Item -LiteralPath $installer.FullName -Destination $destination -Force
 & icacls.exe $destination /setintegritylevel M | Out-Null
 if ($LASTEXITCODE -ne 0) {
@@ -72,10 +73,11 @@ $outputHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
 if ($sourceHash -ne $outputHash) {
     throw '导出后的安装包 SHA-256 校验不一致，请勿分发。'
 }
-"$($outputHash.ToLowerInvariant())  $($installer.Name)" |
-    Set-Content -LiteralPath (Join-Path $releaseDirectory "$($installer.Name).sha256") -Encoding utf8
+"$($outputHash.ToLowerInvariant())  $outputName" |
+    Set-Content -LiteralPath (Join-Path $releaseDirectory "$outputName.sha256") -Encoding utf8
 # Only prune old installers after the new output has passed hash verification.
-Get-ChildItem -LiteralPath $releaseDirectory -Filter "$($config.productName)_*-setup.exe" -File |
+Get-ChildItem -LiteralPath $releaseDirectory -Filter '*-setup.exe' -File |
+    Where-Object { $_.Name -like "$($config.productName)_*-setup.exe" -or $_.Name -like 'CryptoNews_*-setup.exe' } |
     Where-Object { $_.FullName -ne $destination } |
     ForEach-Object {
         $oldPath = [IO.Path]::GetFullPath($_.FullName)
@@ -95,7 +97,7 @@ $manifest = [ordered]@{
     pub_date = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
     platforms = @{ 'windows-x86_64' = @{
         signature = $signature
-        url = "https://github.com/panda-student/crypto-news/releases/download/v$($config.version)/$([Uri]::EscapeDataString($installer.Name))"
+        url = "https://github.com/panda-student/crypto-news/releases/download/v$($config.version)/$outputName"
     } }
 }
 $utf8NoBom = New-Object Text.UTF8Encoding($false)
