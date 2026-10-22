@@ -1502,6 +1502,15 @@ async fn system_ctx(st: &AppState, flash: Flash) -> Value {
     put_flash(&mut m, flash);
     let a = admin(st);
     let shell = a.app_get(app_keys::SHELL).await.unwrap_or(Value::Null);
+    if shell.as_str() == Some("desktop") {
+        let update = a
+            .app_get(app_keys::UPDATE_STATUS)
+            .await
+            .unwrap_or(Value::Null);
+        if let Some(version) = update.get("current_version").and_then(Value::as_str) {
+            m["version"] = json!(version);
+        }
+    }
     let autostart = a.app_get(app_keys::AUTOSTART).await.unwrap_or(Value::Null);
     let tray = a
         .app_get(app_keys::CLOSE_TO_TRAY)

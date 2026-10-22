@@ -6,7 +6,7 @@
 
 | 项目 | 结果与边界 |
 | --- | --- |
-| 编译与静态检查 | workspace release 模式，fmt、Clippy `-D warnings` 通过 |
+| 编译与静态检查 | workspace release 模式，fmt、Clippy `-D warnings` 通过；最后的桌面版本显示修正又通过 web 的 58 项测试及 web/desktop Clippy |
 | Rust 测试 | 454 项通过，0 失败；覆盖现有插件及 MCP 的准备/确认、并发、取消、过期、防重放、权限、密钥、内部模型共用计划与业务错误 |
 | 安装卡住 | 运行中的旧版安装到 D:\CryptoNews，使用 0.2.0 修复包覆盖安装：退出码 0，约 5.91 秒完成，旧进程不再运行。0.2.1 保留相同安装退出逻辑 |
 | 安装后界面 | 原生窗口截图，以及浏览器连接已安装 0.2.0 的真实本机服务。验证关注币种草稿/撤销、MCP 确认生效后展示已有项、移除与保存；测试数据已恢复 |
@@ -20,9 +20,11 @@
 | 源码对应 | 发布快照与工作区所有 crates 源文件逐字节一致；本地私有 Git 历史、数据和配置不上传 |
 | 架构图 | archify showcase 9/9 检查通过、0 警告；4 种桌面尺寸明暗主题检查通过；已检查大屏截图，没有连线穿过卡片或文字遮挡 |
 
-安装包：`release/CryptoNews_0.2.1_x64-setup.exe`，9,210,923 字节。
+安装包：`release/CryptoNews_0.2.1_x64-setup.exe`，9,212,414 字节。
 
-SHA-256：`e38c8a7da757f94bad644438aadd52df5d67845ad38a1fe15dcec1b02a61eae6`。
+SHA-256：`28a943c14796ebf608a697413d616daebed8cd69e753b94236470b9d1420e427`。
+
+GitHub Windows CI 首次手动运行已成功完成：检查、签名打包、上传产物均通过，见[CI 记录](https://github.com/panda-student/crypto-news/actions/runs/39798153369)。手动触发按设计跳过标签发行步骤；以后推送与应用版本一致的 v* 标签会执行发布。CI 运行候选与最终包的差异仅为随后本地验证的桌面版本显示修正，最终包由本机重新构建并发布。
 
 架构图 HTML SHA-256：`ada014c9086df7ea71f58ac3cd25d4c441e8a760ef233d25730fdc950e123f50`。JSON 规格为 `docs/architecture/architecture-compact.json`，自动化浏览器证据为同目录 `architecture.visual-check.json`；该机器报告的 visualReview=pending 表示自动检查不代替视觉审查，本轮另行查看了大屏截图。
 
@@ -31,7 +33,7 @@ SHA-256：`e38c8a7da757f94bad644438aadd52df5d67845ad38a1fe15dcec1b02a61eae6`。
 - 应用内“下载 → 安装 → 重启 → 数据保留”的完整升级流程：用户明确选择稍后再做。自动审批阻止代点安装更新，未绕过或用 API 代替点击。
 - 对全部 MCP 工具的逐项真实 GUI 执行、外部 Claude/Cursor 等特定客户端配置验收；本轮已验证真实 stdio 与内部 DeepSeek 共用执行计划。
 - Windows Authenticode 代码签名尚未配置；Tauri 更新签名已配置并验证。
-- GitHub Windows CI 工作流已上传并触发，运行结果见[本次 CI](https://github.com/panda-student/crypto-news/actions/runs/39798153369)。本记录不把启动任务等同于 CI 全部通过。
+- CI 的标签发布步骤尚未以新版本标签再次触发；当前 0.2.1 发行文件由本地授权发布，应用已能发现该公开版本。
 
 ## 本机证据
 
