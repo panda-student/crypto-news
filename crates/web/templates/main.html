@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+{% block title %}首页{% endblock %}
+{% block bodyclass %}app v17{% endblock %}
+{% block head %}<link rel="stylesheet" href="/assets/main-v17.css"><link rel="stylesheet" href="/assets/layout-resize.css"><link rel="stylesheet" href="/assets/home.css"><script defer src="/assets/layout-resize.js"></script>{% endblock %}
+{% block topbar %}{% endblock %}
+{% block topright %}{% endblock %}
+{% block body %}
+<div class="w" id="w" data-watch="{{ watch }}" data-last="{{ last_seen }}">
+{% if gaps %}<div class="ban" id="first-run">{% for g in gaps %}<div class="gap" data-gap="{{ g.target }}"><span data-channel-warning>{{ g.text }}</span> <a href="/settings#s-{{ g.target }}">{{ g.link }}</a></div>{% endfor %}</div>{% endif %}
+<div id="fl" class="filter-popover" popover aria-label="组合筛选"></div>
+<div class="app" id="app" data-split-layout>
+<div class="feed" id="feed" data-feed-panel></div><div class="splitter" data-splitter role="separator" tabindex="0" aria-label="调整消息流与对话宽度，双击恢复默认" aria-orientation="vertical" aria-valuemin="28" aria-valuemax="72" aria-valuenow="67"></div>
+<div class="rc" data-chat-panel><div class="rt" id="rt"></div><div class="rb" id="rb"></div>
+<div class="ask"><div id="contexts"></div><div class="ibx"><input id="q" type="text" placeholder="问点什么…" autocomplete="off"><button class="sbtn" id="sbtn" type="button" aria-label="发送"></button></div></div></div>
+<div class="sb c" id="sb" data-session-panel></div><button class="chat-reopen" data-expand-chat type="button">展开分析与追问</button>
+</div>
+</div>
+<dialog id="push-settings" aria-labelledby="push-title"><form id="push-form"><div class="push-header"><h2 id="push-title" tabindex="-1" autofocus>消息推送</h2><button class="help-trigger" type="button" data-help="push-guide" aria-label="推送规则" aria-controls="push-guide" aria-expanded="false">?</button><button type="button" id="push-close" aria-label="关闭推送设置">×</button></div><p class="muted small">只通知值得关注的重点消息。设置保存后应用于已配置的推送渠道。</p><label class="push-switch"><input type="checkbox" id="push-enabled">开启重点消息推送</label><fieldset id="push-options"><legend>推送范围</legend><label class="push-choice"><input type="radio" name="push-scope" value="all" checked><span><b>全部重点（推荐）</b><small>紧急事件 + 重要利空 + 重要利好</small></span></label><label class="push-choice"><input type="radio" name="push-scope" value="urgent"><span><b>仅紧急事件</b><small>只接收需要优先处理的紧急消息</small></span></label><label class="push-choice"><input type="radio" name="push-scope" value="followed"><span><b>关注币种的重点</b><small>仅接收所选币种的紧急事件、重要利空和利好</small></span></label><div id="push-assets"><span class="small muted">选择关注币种（可多选）</span><div class="push-asset-list"><label><input type="checkbox" name="push-asset" value="BTC">BTC</label><label><input type="checkbox" name="push-asset" value="ETH">ETH</label><label><input type="checkbox" name="push-asset" value="SOL">SOL</label></div></div><div class="push-delivery"><div><b>紧急事件</b><span>立即推送</span></div><div><b>重要利空 / 利好</b><label>合并间隔 <select id="push-interval" aria-label="重要消息合并间隔"><option value="5">5 分钟（推荐）</option><option value="10">10 分钟</option><option value="15">15 分钟</option></select></label></div></div></fieldset><div class="push-preview"><b>发送队列</b><p class="small muted" data-dispatch-queue="total" role="status" aria-live="polite">队列状态同步中…</p></div><div class="push-preview"><b>当前已加载事件匹配预览</b><p id="push-preview-summary" role="status"></p><ul id="push-preview-list"></ul><small>预览使用已加载的全部事件，不受首页搜索和筛选影响；匹配已有消息不会触发补推。</small></div><p class="small muted">按原始发布时间判断：紧急 6 小时、重要利空 / 利好 24 小时。一般和中性消息仅在首页展示。</p><p class="push-error" id="push-error" role="alert"></p><div class="push-footer"><button type="button" id="push-cancel">取消</button><button type="submit" class="primary">保存设置</button></div></form></dialog><div id="home-help" popover="manual" class="help-popover" tabindex="-1"></div>{% raw %}
+<script>
+(function () {
+var $ = function (id) { return document.getElementById(id); };
+var ESCM = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ESCM[c]; }); }
+var IC = {
+  pen: 'M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4 M13.5 6.5l4 4',
+  x: 'M18 6l-12 12 M6 6l12 12', plus: 'M12 5l0 14 M5 12l14 0',
+  col: 'M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12 M15 4v16 M9 10l2 2l-2 2',
+  exp: 'M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12 M15 4v16 M10 10l-2 2l2 2'
+};
+function ic(n, sz) {
+  sz = sz || 14;
+  return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    IC[n].split(' M').map(function (p, i) { return '<path d="' + (i ? 'M' : '') + p + '"/>'; }).join('') + '</svg>';
+}
+var SVG_STOP = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="7" r="2.6" fill="currentColor"/></svg>';
+var SVG_GO = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M10 2v4.5H3M5.5 4L3 6.5 5.5 9" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var SVG_RF = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0 -2.3 5.7"/><path d="M20 4v7h-7"/></svg>';
+var historyMore = true, historyBusy = false, historyCursor = null;
+var refreshing = false, updTxt = '', nextRefresh = Date.now() + 30000, expanded = {};
+var LV = { u: '紧急', i: '重要', n: '一般', x: '归档' }, ORD = { u: 0, i: 1, n: 2, x: 3 };
+var LVAPI = { u: 'urgent', i: 'important', n: 'normal', x: 'archive' };
+var DIR = { up: '↑ 利好', dn: '↓ 利空', nu: '中性' };
+var CH = { wechat: '微信', wecom: '企业微信' };
+
+/* ---------- 网络与提示 ---------- */
+function api(url, body) {
+  var o = { method: body === undefined ? 'GET' : 'POST', headers: { 'Accept': 'application/json' } };
+  if (body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
+  return fetch(url, o).then(function (r) {
+    if (!r.ok) { return r.text().then(function (t) { throw new Error((t || ('HTTP ' + r.status)).slice(0, 160)); }); }
+    return r.status === 204 ? null : r.json().catch(function () { return null; });
+  });
+}
+var tt;
+function toast(t, ms, raw) {
+  var e = $('toast');
+  if (raw) { e.innerHTML = t; } else { e.textContent = t; }
+  e.hidden = false; clearTimeout(tt);
+  tt = setTimeout(function () { e.hidden = true; }, ms || 1800);
+}
+function fail(e) { toast(e && e.message ? e.message : '操作失败', 3000); }
+
+/* ---------- 数据 ---------- */
+var W = $('w');
+var WATCH = (W.dataset.watch || '').split(',').filter(Boolean);
+var LAST = W.dataset.last || '';
+var D = { days: [], items: [], sources: [], sources_unknown: false, push_unknown: false, degraded: false, error: null, now: '' };
+var F = { asset: null, lv: 'all', dir: null, unread: false, star: false, src: null, acc: null, day: null, q: '' };
+var sel = null, rtab = 'chat', lim = 15, pending = 0, brief = null, briefOn = true, shown = [], loaded = false, NOW = '';
+function byId(id) { return D.items.filter(function (x) { return String(x.id) === String(id); })[0] || CACHE[id]; }
+function ms(it) { return Date.parse(it.at) || 0; }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function rel(it) {
+  var t = new Date(ms(it)), now = new Date(), diff = Math.floor((now - t) / 60000);
+  if (diff < 1) { return '刚刚'; }
+  if (diff < 60) { return diff + ' 分钟前'; }
+  var a = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(), b = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime();
+  var dd = Math.round((a - b) / 86400000);
+  return (dd === 0 ? '今天 ' : dd === 1 ? '昨天 ' : pad(t.getMonth() + 1) + '-' + pad(t.getDate()) + ' ') + hm(t);
+}
+function sname(it) { return it.a || it.sn; }
+function dirB(d) { return d ? '<span class="' + d + '">' + DIR[d] + '</span>' : ''; }
+function assetsH(it) { return (it.assets || []).map(function (a) { return '<span class="as" data-asset="' + esc(a) + '">' + esc(a) + '</span>'; }).join(''); }
+function unreadN() { return D.items.filter(function (x) { return x.unread; }).length; }
+function starN() { return D.items.filter(function (x) { return x.starred; }).length; }
+
+function m(it) {
+  if (F.asset && (it.assets || []).indexOf(F.asset) < 0) { return false; }
+  if (F.lv === 'ui' && !(it.lv === 'u' || it.lv === 'i')) { return false; }
+  if (F.lv === 'u' && it.lv !== 'u') { return false; }
+  if (F.dir && it.dc !== F.dir) { return false; }
+  if (F.unread && !it.unread) { return false; }
+  if (F.star && !it.starred) { return false; }
+  if (F.src && it.s !== F.src) { return false; }
+  if (F.acc && it.a !== F.acc) { return false; }
+  if (F.day !== null && it.d !== F.day) { return false; }
+  if (F.q) {
+    var q = F.q.toLowerCase();
+    if (it.t.toLowerCase().indexOf(q) < 0 && (it.ot || '').toLowerCase().indexOf(q) < 0 && (sname(it) || '').toLowerCase().indexOf(q) < 0 && !(it.assets || []).some(function (a) { return a.toLowerCase().indexOf(q) >= 0; })) { return false; }
+  }
+  return true;
+}
+
+/* ---------- 筛选栏 ---------- */
+function ch(on, attr, txt) { return '<span class="chip' + (on ? ' on' : '') + '" ' + attr + '>' + txt + '</span>'; }
+function flR() {
+  var ac = {}; D.items.forEach(function (x) { (x.assets || []).forEach(function (a) { ac[a] = (ac[a] || 0) + 1; }); });
+  var all = Object.keys(ac).sort(function (a, b) {
+    var wa = WATCH.indexOf(a) >= 0 ? 0 : 1, wb = WATCH.indexOf(b) >= 0 ? 0 : 1;
+    return wa - wb || ac[b] - ac[a] || (a < b ? -1 : 1);
+  });
+  var assets = all.slice(0, 8);
+  if (F.asset && assets.indexOf(F.asset) < 0) { assets.push(F.asset); }
+  var h = '';
+  if (all.length) {
+    h += ch(!F.asset, 'data-fa=""', '全部币种') + assets.map(function (a) { return ch(F.asset === a, 'data-fa="' + esc(a) + '"', esc(a) + ' ' + (ac[a] || 0)); }).join('') + '<a class="chip" href="/settings" title="在设置里增删关注币种（关注的币种排在最前）">+</a><span class="sep"></span>';
+  }
+  h += [['all', '全部级别'], ['ui', '紧急和重要'], ['u', '仅紧急']].map(function (r) { return ch(F.lv === r[0], 'data-fl="' + r[0] + '"', r[1]); }).join('') + '<span class="sep"></span>';
+  h += ch(F.dir === 'up', 'data-fd="up"', '↑ 利好') + ch(F.dir === 'dn', 'data-fd="dn"', '↓ 利空') + '<span class="sep"></span>';
+  h += ch(F.unread, 'data-fu="1"', '只看未读 ' + unreadN()) + ch(F.star, 'data-fs="1"', '★ 待跟进 ' + starN());
+  var ex = [];
+  if (F.src) { ex.push(['src', '信源：' + srcName(F.src) + (F.acc ? ' ' + F.acc : '')]); }
+  if (F.day !== null) { ex.push(['day', '日期：' + (D.days[F.day] || '')]); }
+  if (F.q) { ex.push(['q', '搜索：' + F.q]); }
+  if (ex.length) { h += '<span class="sep"></span>' + ex.map(function (r) { return ch(true, 'data-fx="' + r[0] + '"', esc(r[1]) + ' ×'); }).join(''); }
+  $('fl').innerHTML = h;
+}
+function srcName(id) {
+  for (var k = 0; k < D.items.length; k++) { if (D.items[k].s === id) { return D.items[k].sn; } }
+  return id;
+}
+function srcSum() {
+  var e = $('srcsum');if(!e)return;
+  if(window.AppStatus && window.AppStatus.get('sources')) {window.AppStatus.paint();return;}
+  if (D.sources_unknown) { e.textContent = '信源 状态不可用'; return; }
+  var ok = D.sources.filter(function (s) { return s.state === 'ok'; }).length;
+  e.textContent = '信源 ' + ok + '/' + D.sources.length + ' 正常 · 含 ' + D.sources.filter(function(s){return s.id.indexOf('x:')===0}).length + ' 个 X 账号';
+  e.style.color = ok === D.sources.length ? '' : 'var(--text-warning)';
+}
+
+/* ---------- 消息流 ---------- */
+function row(it, compact) {
+  var joined = CARDS.some(function(c) { return same(c.id, it.id); });
+  return '<article class="it' + (joined ? ' sel' : '') + (it.unread ? '' : ' rd') + '" data-id="' + it.id + '"' + (compact ? '' : ' id="r' + it.id + '"') + '><div class="item-meta"><span class="dot"></span><span class="bd ' + it.lv + '">' + LV[it.lv] + '</span>' + dirB(it.dc) + assetsH(it) + (joined ? '<span class="mu">已加入会话</span>' : '') + '</div><button class="item-title" data-id="' + it.id + '">' + esc(it.t) + '</button>' + (it.impact ? '<div class="imp">' + esc(it.impact) + '</div>' : '') + '<div class="item-meta"><span>' + esc(sname(it)) + ' · ' + rel(it) + '</span><span style="flex:1"></span><button class="st' + (it.starred ? ' on' : '') + '" data-star="' + it.id + '" aria-label="待跟进">' + (it.starred ? '★' : '☆') + '</button></div></article>';
+}
+function groupsH(list) {
+  return '<div class="group-grid">' + [ ['urgent', '紧急事件', '优先处理 · 不限方向', function(x) {return x.lv === 'u';}], ['risk', '重要利空', '关注风险与负面影响', function(x) {return x.lv === 'i' && x.dc === 'dn';}], ['positive', '重要利好', '关注机会与积极变化', function(x) {return x.lv === 'i' && x.dc === 'up';}] ].map(function(g) {
+    var rows = list.filter(function(x){return x.d >= 0 && x.d < 7 && g[3](x);});
+    return '<section class="group ' + g[0] + '"><div class="group-head"><b>' + g[1] + '</b><span>' + rows.length + ' 条</span><p>' + g[2] + ' · 近 7 天已加载消息</p></div>' + (rows.length ? rows.slice(0, expanded[g[0]] ? rows.length : 2).map(function(x){return row(x,true);}).join('') : '<p class="empty">暂无符合条件的消息</p>') + (rows.length > 2 ? '<button class="group-more" data-group="' + g[0] + '">' + (expanded[g[0]] ? '收起' : '展开全部 ' + rows.length + ' 条') + '</button>' : '') + '</section>';
+  }).join('') + '</div>';
+}
+
+function span(min) {
+  if (min < 60) { return Math.max(1, min) + ' 分钟'; }
+  if (min < 2880) { return Math.round(min / 60) + ' 小时'; }
+  return Math.round(min / 1440) + ' 天';
+}
+function mkBrief() {
+  var cut = Date.parse(LAST) || (Date.now() - 86400000), nw = Date.parse(D.now) || Date.now();
+  var set = D.items.filter(function (x) { return (Date.parse(x.ca) || 0) > cut; });
+  var keys = set.filter(function (x) { return (x.lv === 'u' || x.lv === 'i') && x.impact; }).sort(function (a, b) { return ORD[a.lv] - ORD[b.lv] || ms(b) - ms(a); }).slice(0, 3);
+  brief = { n: set.length, u: set.filter(function (x) { return x.lv === 'u'; }).length, i: set.filter(function (x) { return x.lv === 'i'; }).length, ids: keys.map(function (x) { return x.id; }), span: span(Math.round((nw - cut) / 60000)) };
+}
+function briefH() {
+  if (!brief || !briefOn || !brief.n) { return ''; }
+  var h = '<div class="brief"><div style="display:flex;gap:6px;align-items:center"><b style="font-weight:500">自上次查看以来</b><span class="mu">' + brief.span + ' · 新增 ' + brief.n + ' 条，紧急 ' + brief.u + '，重要 ' + brief.i + '</span><span style="flex:1"></span><span class="lk" data-allread="1">全部标为已读</span><span class="ic" data-closebrief="1" title="收起">' + ic('x', 12) + '</span></div>';
+  var ks = brief.ids.map(byId).filter(Boolean);
+  if (ks.length) {
+    h += '<div class="mu" style="font-size:11px;margin:2px 0">要点</div>' + ks.map(function (it) {
+      return '<div class="bl" data-id="' + it.id + '"><span class="bd ' + it.lv + '">' + LV[it.lv] + '</span>' + dirB(it.dc) + '<span class="bt" style="flex:1;min-width:0">' + esc(it.t) + '<span class="mu">：' + esc(it.impact) + '</span></span></div>';
+    }).join('');
+  }
+  return h + '</div>';
+}
+function countdown() {
+  var el = $('countdown'); if (el) el.textContent = refreshing ? '正在同步消息…' : '下次自动刷新 00:' + pad(Math.max(0, Math.ceil((nextRefresh - Date.now()) / 1000)));
+}
+function feedR() {
+  var h = '<div class="feed-heading"><div><h2>消息雷达</h2><p class="mu">先看紧急，再判断风险与机会</p></div><div class="refresh-stack"><span id="countdown" role="timer"></span><button class="rf" data-refresh="1"' + (refreshing ? ' disabled' : '') + '>' + SVG_RF + (refreshing ? '刷新中…' : '一键刷新消息') + '</button></div></div><p class="mu refresh-result" role="status">' + esc(updTxt || '每 30 秒同步已采集消息 · 各信源按设置的周期采集') + '</p>';
+  if (D.error) h += '<div class="ban">消息暂时无法读取：' + esc(D.error) + '</div>';
+  else if (D.degraded) h += '<div class="ban">部分数据暂不可用，统计可能不完整。</div>';
+  h += briefH();
+  var list = D.items.filter(m).sort(function(a,b) { return ms(b) - ms(a) || b.id - a.id; });
+  shown = list.slice(0,lim);
+  h += groupsH(list) + '<div class="stream-heading"><b>全部消息流</b><span class="mu">已加载消息按发布时间排序</span></div><div class="message-stream">' + shown.map(function(it){return row(it,false);}).join('') + '</div>';
+  if (list.length > lim) h += '<button class="more" data-more="1">继续加载消息</button>';
+  else if(historyMore) h += '<button class="more" data-history="1"' + (historyBusy ? ' disabled' : '') + '>' + (historyBusy ? '正在加载…' : '加载更早消息') + '</button>';
+  else h += '<div class="empty">' + (loaded ? '已显示当前范围全部 ' + list.length + ' 条消息' : '正在加载…') + '</div>';
+  var f = $('feed'), top = f.scrollTop; f.innerHTML = h; f.scrollTop = top; countdown();
+}
+
+/* ---------- 详情 ---------- */
+function pushText(it) {
+  if (it.pushed) { return '已推送' + ((it.pushed_to || []).length ? ' ' + it.pushed_to.map(function (c) { return esc(CH[c] || c); }).join('、') : ''); }
+  if (D.push_unknown) { return '暂无'; }
+  return it.lv === 'u' || it.lv === 'i' ? '未推送' : '一般级，未推送';
+}
+function detR(id) {
+  var it = byId(id); if(!it) return '';
+  var h = '<div class="item-meta"><span class="bd ' + it.lv + '">' + LV[it.lv] + '</span>' + dirB(it.dc) + assetsH(it) + '</div><h3 class="analysis-title">' + esc(it.t) + '</h3><div class="mu small">' + esc(sname(it)) + ' · ' + rel(it) + '</div>';
+  h += '<div class="blk"><span>消息摘要</span>' + esc(it.sz || it.summary || '该信源未提供摘要，请查看原文。') + '</div><div class="blk"><span>影响分析</span>' + esc(it.impact || '暂无已完成的影响分析，可在下方追问。') + '</div>';
+  h += '<details class="source-details"><summary>原文信息与操作</summary>' + (it.ot ? '<p>' + esc(it.ot) + '</p>' : '') + (it.sz && it.summary ? '<p>' + esc(it.summary) + '</p>' : '') + '<div class="mu">' + pushText(it) + '</div><div class="acts"><button data-open="' + it.id + '">打开原文 ↗</button><button data-star="' + it.id + '">' + (it.starred ? '取消跟进' : '待跟进') + '</button><select data-relv="' + it.id + '" aria-label="调整消息级别">' + ['u','i','n','x'].map(function(l){return '<option value="' + l + '"' + (l===it.lv ? ' selected' : '') + '>' + LV[l] + '</option>';}).join('') + '</select></div></details>';
+  return h + '<div class="quick">' + ['这条消息有哪些影响？','哪些信息还需要核实？'].map(function(q){return '<button data-quick="' + it.id + '" data-qa="' + esc(q) + '">' + esc(q) + '</button>';}).join('') + '</div>';
+}
+
+/* ---------- 会话 ---------- */
+var CARDS = [], CACHE = {}, contextBusy = false, removedCard = null;
+var sessionEpoch=0, sharedSession=false, incomingSession=null;
+var cur = null, SES = [], TURNS = [], CTX = null, sTitle = '新会话', sTime = '', stream = null, editing = null, sbOpen = false;
+try { sbOpen = localStorage.getItem('sbOpen2') === '1'; } catch (e) {}
+var same = function (a, b) { return String(a) === String(b); };
+function turnHtml(t) {
+  var h = '<div class="question-context">' + (t.origin === 'wechat-ilink' ? '微信提问 · ' : t.origin && t.origin !== 'desktop' ? '渠道提问 · ' : '应用提问 · ') + (t.item_ids && t.item_ids.length ? '参考消息：' + t.item_ids.map(function(id){var event=byId(id),it=event&&event.reports?event.reports.find(function(r){return same(r.id,id)}):rawById(id);return esc(it?it.t:'消息 '+id)+(CARDS.some(function(c){var current=byId(c.id);return same(c.id,id)||current&&current.reports&&current.reports.some(function(r){return same(r.id,id)})})?'':'（已移出）');}).join(' · ') : '检索已采集消息') + '</div><div class="qb"><span>' + esc(t.question) + '</span></div>';
+  if (t.pending) { h += '<div class="ab"><span class="cur" id="live">' + esc(t.text || '').replace(/\n/g, '<br>') + '</span></div>'; }
+  else { h += '<div class="ab">' + t.html + '</div>'; }
+  return h;
+}
+function cardH(c) {
+  var it = byId(c.id);
+  return '<section class="analysis-card" id="card' + c.id + '"><div class="card-bar"><b>消息分析</b><button data-remove="' + c.id + '">移出会话</button></div><div class="card-body">' + (it ? detR(c.id) : '<p>消息已不可用，可移出会话。</p>') + '</div></section>';
+}
+function chatR() {
+  var h = '';
+  for (var i = 0; i <= TURNS.length; i++) {
+    h += CARDS.filter(function(c) {return Math.min(c.after, TURNS.length) === i;}).map(cardH).join('');
+    if (i < TURNS.length) h += turnHtml(TURNS[i]);
+  }
+  return h || '<div class="chat-empty"><h2>把消息放在一起看</h2><p>点击左侧消息，将分析卡片加入这里。可以结合多条消息追问，也可以移出误选的消息。</p><span class="chip" data-sug="今天对 BTC 影响最大的消息？">今天对 BTC 影响最大的消息？</span></div>';
+}
+function rightR(keep) {
+  rtab = 'chat';
+  $('rt').innerHTML = '<strong>' + (sharedSession ? '微信/渠道 · ' : '') + esc(sTitle === '新会话' ? '分析与追问' : sTitle) + '</strong><span class="mu">' + SES.length + ' 个会话</span><button data-act="new">新会话</button><button data-collapse-chat aria-expanded="true" title="收起整个追问区">收起</button>';
+  var rb = $('rb'), top = rb.scrollTop;
+  rb.innerHTML = chatR(); rb.scrollTop = keep ? top : rb.scrollHeight;
+  $('contexts').innerHTML = '<div class="context-title">' + (CARDS.length ? '本次追问参考 ' + CARDS.length + ' 条消息' : '未指定消息 · 将从已采集消息中检索') + '</div><div class="context-chips">' + CARDS.map(function(c) {
+    var it = byId(c.id); return '<span class="context-chip"><button data-focus="' + c.id + '" title="' + esc(it ? it.t : c.id) + '">' + esc(it ? it.t : '消息 ' + c.id) + '</button><button data-remove="' + c.id + '" aria-label="移出消息">×</button></span>';
+  }).join('') + '</div>';
+  $('q').placeholder = CARDS.length ? '结合这 ' + CARDS.length + ' 条消息追问…' : '问点什么…';
+}
+function rememberSession(id) { try { if(id === null) localStorage.removeItem("activeSessionV17"); else localStorage.setItem("activeSessionV17",String(id)); } catch(e) {} }
+function persistCards(next) {
+  if (contextBusy || (stream && stream.pending)) return Promise.resolve(false);
+  contextBusy = true;
+  return api('/api/v1/chat/context', {session_id:cur, items:next.map(function(c){return {id:Number(c.id),after:c.after};})}).then(function(r){
+    cur = r.session_id; rememberSession(cur); CARDS = next; if(sTitle === '新会话') sTitle = r.title || '消息分析'; render(); loadSessions(); return true;
+  }).catch(function(e){fail(e);return false;}).finally(function(){contextBusy = false;});
+}
+function focusCard(id) { var el = $('card' + id); if(el) el.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+function removeCard(id) {
+  var c = CARDS.find(function(c){return same(c.id,id);}); if(!c) return;
+  persistCards(CARDS.filter(function(c){return !same(c.id,id);})).then(function(ok){ if(ok) { removedCard = {session:cur,card:c}; toast('已移出，后续追问不再指定此消息 <button data-restore-card="1">撤销</button>',5000,true); } });
+}
+function sbR() {
+  if (!sbOpen) {
+    return '<div style="padding:8px 0;display:flex;flex-direction:column;gap:6px;align-items:center">' + (incomingSession ? '<button data-sid="' + incomingSession + '" title="微信/渠道有新消息" style="padding:4px;font-size:10px">●</button>' : '') + '<span class="ic" data-sbt="1" title="展开会话列表">' + ic('exp') + '</span><span class="ic" data-act="new" title="新会话">' + ic('plus') + '</span></div>';
+  }
+  var h = '<div class="sbh"><span style="flex:1;font-weight:500;padding-left:4px">会话</span><span class="ic" data-act="new" title="新会话">' + ic('plus') + '</span><span class="ic" data-sbt="1" title="收起">' + ic('col') + '</span></div><div style="overflow-y:auto;flex:1;padding-bottom:8px">';
+  ['今天', '昨天', '更早'].forEach(function (g) {
+    var ss = SES.filter(function (s) { return s.group === g; });
+    if (!ss.length) { return; }
+    h += '<div class="grp">' + g + '</div>' + ss.map(function (s) {
+      if (same(editing, s.id)) { return '<div class="si on"><input id="ren" value="' + esc(s.title) + '"></div>'; }
+      return '<div class="si' + (same(s.id, cur) ? ' on' : '') + '" data-sid="' + s.id + '" title="' + esc(s.title) + '"><span class="nm">' + (s.shared ? '↔ ' : '') + esc(s.title) + '</span><span class="x2" data-ren2="' + s.id + '" title="重命名">' + ic('pen', 12) + '</span><span class="x2 dl" data-del="' + s.id + '" title="删除">' + ic('x', 12) + '</span></div>';
+    }).join('');
+  });
+  if (!SES.length) { h += '<div class="grp">暂无会话</div>'; }
+  return h + '</div><div class="grp" id="session-sync">微信与应用会话自动同步</div>';
+}
+function renderSb() {
+  var sb = $('sb'); sb.className = 'sb ' + (sbOpen ? 'o' : 'c'); sb.innerHTML = sbR();
+  var ri = $('ren'); if (ri) { ri.focus(); ri.select(); }
+}
+function btn() {
+  var b = $('sbtn');
+  b.disabled = false;
+  if (stream) { b.className = 'sbtn stop'; b.title = '停止回答（Esc）'; b.innerHTML = SVG_STOP; }
+  else if ($('q').value.trim()) { b.className = 'sbtn go'; b.title = '发送（回车）'; b.innerHTML = SVG_GO; }
+  else { b.className = 'sbtn go dis'; b.title = '发送（回车）'; b.disabled = true; b.innerHTML = SVG_GO; }
+}
+function loadSessions() {
+  return api('/api/v1/chat/sessions').then(function(d){
+    var old=SES.find(function(s){return same(s.id,cur);});
+    var previous=SES; SES=d.sessions || [];
+    var changed=SES.find(function(s){var prior=previous.find(function(p){return same(p.id,s.id);});return s.shared && (!prior || prior.updated_at!==s.updated_at) && (!same(s.id,cur) || $('app').classList.contains('chat-hidden'));});
+    if(changed) incomingSession=changed.id;
+    renderSb(); var reopen=$('app').querySelector('[data-expand-chat]');if(reopen)reopen.textContent=incomingSession?'展开追问 · 有新消息':'展开分析与追问';
+    var now=SES.find(function(s){return same(s.id,cur);});
+    var status=$('session-sync');if(status)status.textContent=d.sync_error || '微信与应用会话自动同步';
+    if(old && now && old.updated_at!==now.updated_at && !stream && !contextBusy) return selectSession(cur,true).then(function(){return SES;});
+    return SES;
+  }).catch(function(){return SES;});
+}
+function closeStream() { if (stream && stream.es) { stream.es.close(); } stream = null; btn(); }
+function newChat(item) {
+  if(contextBusy || (stream && stream.pending)) return;
+  sessionEpoch++; sharedSession=false; closeStream(); cur = null; rememberSession(null); TURNS = []; CARDS = []; CTX = item || null; sTitle = '新会话'; sTime = ''; editing = null; rtab = 'chat';
+  renderSb(); rightR(); $('q').focus();
+}
+function selectSession(id, quiet) {
+  if(!quiet) $("app").dispatchEvent(new Event("expand-chat"));
+  if(contextBusy || (stream && stream.pending)) return Promise.resolve();
+  closeStream(); editing = null; var epoch=++sessionEpoch;
+  return api('/api/v1/chat/session/' + id).then(function (d) {
+    if(epoch!==sessionEpoch) return; if(!quiet && same(incomingSession,id))incomingSession=null; sharedSession=!!d.shared;
+    cur = d.id; rememberSession(cur); sTitle = d.title; sTime = d.time || ''; CTX = d.item || null; rtab = 'chat';
+    TURNS = (d.turns || []).map(function (t) { return { id: t.id, question: t.question, html: t.html || '', origin:t.origin || 'desktop', item_ids:t.item_ids || [], pending: !!t.pending, stream_id: t.stream_id || null, text: '' }; });
+    CARDS = (d.context || []).map(function(c){ if(c.item) CACHE[c.id] = c.item; return {id:c.id,after:c.after || 0}; });
+    renderSb(); rightR(quiet); feedR();
+    TURNS.forEach(function (t) { if (t.pending && t.stream_id) { attach(t); } });
+  }).catch(fail);
+}
+function attach(t) {
+  if (!window.EventSource) { return; }
+  var es = new EventSource('/api/v1/chat/stream/' + encodeURIComponent(t.stream_id) + '?from=0');
+  stream = { id: t.stream_id, es: es, t: t }; btn();
+  es.addEventListener('delta', function (e) {
+    try { t.text += JSON.parse(e.data); } catch (x) { return; }
+    var l = $('live');
+    if (l) { l.innerHTML = esc(t.text).replace(/\n/g, '<br>'); var p = $('rb'); p.scrollTop = p.scrollHeight; }
+  });
+  es.addEventListener('done', function (e) {
+    var d = {}; try { d = JSON.parse(e.data); } catch (x) {}
+    es.close(); stream = null; t.pending = false; t.html = d.html || ''; btn();
+    if (cur !== null && TURNS.indexOf(t) >= 0 && rtab === 'chat') { rightR(); }
+    loadSessions();
+  });
+  es.onerror = function () {
+    if (es.readyState === 2) {
+      es.close(); stream = null; btn();
+      if (cur !== null) { selectSession(cur); }
+    }
+  };
+}
+function send(v, onlyId) {
+  if (stream || contextBusy) return;
+  var ids=Array.from(new Set((onlyId?[{id:onlyId}]:CARDS).flatMap(function(c){var e=byId(c.id);return e&&e.reports?e.reports.map(function(r){return Number(r.id)}):[Number(c.id)]}))).slice(0,20);
+  var body = {question:v,item_ids:ids};
+  if(cur !== null) body.session_id = String(cur);
+  stream = {pending:true}; btn();
+  api('/api/v1/chat',body).then(function(r){
+    $('q').value = ''; cur = r.session_id; rememberSession(cur); sTitle = r.title || sTitle;
+    var t = {id:r.turn_id,question:v,html:'',pending:true,stream_id:r.stream_id,text:'',item_ids:ids};
+    TURNS.push(t); stream = null; rightR(); attach(t); loadSessions();
+  }).catch(function(e){stream = null;btn();fail(e);});
+}
+function cancel() {
+  if (!stream || !stream.id) { return; }
+  api('/api/v1/chat/stream/' + encodeURIComponent(stream.id) + '/cancel', {}).catch(fail);
+}
+function saveRen() {
+  var el = $('ren'); if (!el) { return; }
+  var id = editing, v = el.value.trim();
+  editing = null;
+  if (!v) { renderSb(); return; }
+  api('/api/v1/chat/' + id + '/rename', { title: v }).then(function (r) {
+    if (same(cur, id)) { sTitle = (r && r.title) || v; rightR(true); }
+    return loadSessions();
+  }).catch(function (e) { fail(e); renderSb(); });
+}
+function delSession(id) {
+  var s = SES.filter(function (x) { return same(x.id, id); })[0];
+  api('/api/v1/chat/' + id + '/delete', {}).then(function (r) {
+    if (same(cur, id)) { newChat(); rtab = 'chat'; rightR(); }
+    loadSessions();
+    toast('已删除「' + esc(String(s ? s.title : '').slice(0, 10)) + '」 <span class="lk" data-undo="' + esc(r.undo) + '">撤销</span>', 4000, true);
+  }).catch(fail);
+}
+
+/* ---------- 选中、已读、待跟进、改级 ---------- */
+function render() { flR(); feedR(); rightR(true); }
+function markRead(it) {
+  if (!it.unread) { return; }
+  it.unread = false;
+  api('/api/v1/items/' + it.id + '/read', {}).catch(function () {});
+}
+function selItem(id) {
+  $("app").dispatchEvent(new Event("expand-chat"));
+  var it = byId(id); if(!it) return;
+  if(CARDS.some(function(c){return same(c.id,id);})) {focusCard(id);return;}
+  if(CARDS.length >= 20) {toast('每个会话最多参考 20 条消息，请先移出部分消息');return;}
+  CACHE[id] = it;
+  persistCards(CARDS.concat([{id:it.id,after:TURNS.length}])).then(function(ok){if(ok){sel = it.id; markRead(it); feedR(); focusCard(id);}});
+}
+function toggleStar(id) {
+  api('/api/v1/items/' + id + '/star', {}).then(function (r) {
+    var it = byId(id); if (!it) { return; }
+    it.starred = r && r.starred !== undefined ? !!r.starred : !it.starred;
+    toast(it.starred ? '已加入待跟进' : '已移出待跟进'); render();
+  }).catch(fail);
+}
+function setLevel(id, l) {
+  var it = byId(id);
+  api('/api/v1/items/' + id + '/level', { level: LVAPI[l] }).then(function () {
+    if (it) { it.lv = l; }
+    toast('已人工改为「' + LV[l] + '」'); render();
+  }).catch(function (e) { fail(e); render(); });
+}
+function openOrig(id) {
+  var it = byId(id); if (it) { markRead(it); }
+  api('/api/v1/items/' + id + '/open', {}).then(function () { toast('已在系统浏览器打开原文'); }).catch(fail);
+}
+function allRead(){var ids=eventRows().filter(m).flatMap(function(e){return e.reports.map(function(r){return r.id})});Promise.all(ids.map(function(id){return api('/api/v1/items/'+id+'/read',{})})).then(function(){D.items.forEach(function(x){if(ids.includes(x.id))x.unread=false});toast('已将当前结果标为已读');render()}).catch(fail)}
+
+function clearF() { F = { asset: null, lv: 'all', dir: null, unread: false, star: false, src: null, acc: null, day: null, q: '' }; $('sq').value = ''; lim = 15; }
+function locate(id) {
+  var it = byId(id);
+  if (!it) { toast('请在历史消息中加载该消息，或点击引用打开原文'); return; }
+  clearF(); lim = 100000; sel = it.id; markRead(it); render();
+  var e = $('r' + it.id);
+  if (e) { e.scrollIntoView({ block: 'center' }); e.classList.add('flash'); }
+}
+
+/* ---------- 加载与轮询 ---------- */
+function applyUrl() {
+  var p = new URLSearchParams(location.search), v;
+  if ((v = p.get('lv')) && (v === 'u' || v === 'ui')) { F.lv = v; }
+  if (p.get('unread')) { F.unread = true; }
+  if (p.get('star')) { F.star = true; }
+  if ((v = p.get('dir')) && (v === 'up' || v === 'dn')) { F.dir = v; }
+  if ((v = p.get('asset'))) { F.asset = v; }
+  if ((v = p.get('src'))) { F.src = v; }
+  if ((v = p.get('acc'))) { F.src = F.src || null; F.acc = v; }
+  if ((v = p.get('q'))) { F.q = v; if($('sq'))$('sq').value = v; }
+  if ((v = p.get('day'))) { var k = D.days.indexOf(v); if (k >= 0) { F.day = k; } }
+}
+function loadDash() {
+  return api('/api/v1/dash').then(function (d) {
+    var first = !loaded;
+    D = d; NOW = d.now || NOW; loaded = true; pending = 0;
+    if(first) historyCursor = D.items.slice().sort(function(a,b){return Date.parse(a.ca)-Date.parse(b.ca)||a.id-b.id;})[0]?.id || null;
+    if (first) { mkBrief(); applyUrl(); }
+    srcSum(); render();
+  }).catch(function (e) {
+    if (!loaded) { D.error = e.message; render(); }
+  });
+}
+function refresh() {
+  if(refreshing) return;
+  refreshing = true; window.AppStatus?.sync(); feedR();
+  return api('/api/v1/dash').then(function(d){
+    if(d.error) throw new Error(d.error);
+    var ids = new Set(D.items.map(function(x){return x.id;}));
+    var n = d.items.filter(function(x){return !ids.has(x.id);}).length;
+    var old = D.items.filter(function(x){return !d.items.some(function(y){return y.id===x.id;});});
+    D = d; D.items = D.items.concat(old); NOW = d.now || NOW; loaded = true; pending = 0;
+    updTxt = '上次刷新 ' + hm(new Date()) + ' · ' + (n ? '新增 ' + n + ' 条消息' : '暂无新消息');
+    srcSum(); flR(); rightR(true);
+  }).catch(function(e){updTxt = '刷新失败，将在 30 秒后重试';fail(e);}).finally(function(){refreshing = false;nextRefresh = Date.now()+30000;feedR();});
+}
+function loadHistory() {
+  if(historyBusy || !historyMore || !loaded) return;
+  historyBusy = true; feedR();
+  api('/api/v1/feed/history' + (historyCursor ? '?before_id=' + historyCursor : '')).then(function(r){
+    var seen = new Set(D.items.map(function(x){return x.id;}));
+    D.items = D.items.concat(r.items.filter(function(x){return !seen.has(x.id);}));
+    historyCursor = r.next; historyMore = r.more; lim += 15; flR();
+  }).catch(fail).finally(function(){historyBusy = false;feedR();});
+}
+
+/* ---------- 事件 ---------- */
+$('toast').addEventListener('click', function (e) {
+  if(e.target.closest('[data-restore-card]') && removedCard && same(removedCard.session,cur)) { var c = removedCard.card; if(!CARDS.some(function(x){return same(x.id,c.id);})) persistCards(CARDS.concat([c])); $('toast').hidden=true; return; }
+  var u = e.target.closest('[data-undo]'); if (!u) { return; }
+  $('toast').hidden = true;
+  api('/api/v1/chat/undo/' + encodeURIComponent(u.dataset.undo), {}).then(function (r) {
+    return loadSessions().then(function () { if (r && r.session_id) { return selectSession(r.session_id); } });
+  }).catch(fail);
+});
+W.addEventListener('dblclick', function (e) {
+  var t = e.target.closest('[data-sid]');
+  if (t) { editing = t.dataset.sid; renderSb(); }
+});
+W.addEventListener('focusout', function (e) {
+  if (e.target.id === 'ren') { setTimeout(function () { if (editing !== null && $('ren')) { saveRen(); } }, 0); }
+});
+W.addEventListener('keydown', function (e) {
+  if (e.target.id === 'ren') {
+    if (e.key === 'Enter') { saveRen(); } else if (e.key === 'Escape') { editing = null; renderSb(); }
+  }
+});
+W.addEventListener('change', function (e) {
+  var d = e.target.dataset;
+  if (d.relv) { setLevel(d.relv, e.target.value); }
+});
+W.addEventListener('click', function (e) {
+  if (e.target.closest('#sbtn') || e.target.closest('a') || (e.target.closest('details')&&!e.target.closest('[data-star],[data-open]')) || e.target.closest('[data-help]') || e.target.closest('#filter-toggle') || e.target.closest('#push-settings-open') || e.target.closest('#filter-reset') || e.target.closest('[data-nf]')) { return; }
+  var t = e.target.closest('[data-history],[data-remove],[data-focus],[data-group],[data-fa],[data-fl],[data-fd],[data-fu],[data-fs],[data-fx],[data-star],[data-asset],[data-open],[data-cite],[data-loc],[data-shownew],[data-refresh],[data-allread],[data-closebrief],[data-more],[data-rtab],[data-qa],[data-sug],[data-sbt],[data-act],[data-del],[data-ren2],[data-sid],[data-clrctx],.cite,[data-id]');
+  if (!t) { return; }
+  var d = t.dataset;
+  if(d.history) {loadHistory();return;}
+  else if(d.remove) {removeCard(d.remove);return;}
+  else if(d.focus) {focusCard(d.focus);return;}
+  else if(d.group) {expanded[d.group] = !expanded[d.group];feedR();return;}
+  else if (d.fa !== undefined) { F.asset = d.fa || null; lim = 15; }
+  else if (d.fl) { F.lv = d.fl; lim = 15; }
+  else if (d.fd) { F.dir = F.dir === d.fd ? null : d.fd; lim = 15; }
+  else if (d.fu) { F.unread = !F.unread; lim = 15; }
+  else if (d.fs) { F.star = !F.star; lim = 15; }
+  else if (d.fx) { if (d.fx === 'src') { F.src = null; F.acc = null; } else if (d.fx === 'day') { F.day = null; } else { F.q = ''; $('sq').value = ''; } lim = 15; }
+  else if (d.star) { toggleStar(d.star); return; }
+  else if (d.asset) { F.asset = d.asset; lim = 15; }
+  else if (d.open !== undefined) { var o = byId(d.open); openOrig(d.open); return; }
+  else if (d.cite) { openOrig(d.cite); return; }
+  else if (d.loc) { locate(d.loc); return; }
+  else if (t.classList.contains('cite')) {
+    var ab = t.closest('.ab'), rows = ab ? ab.querySelectorAll('.cl') : [];
+    var rw = rows[Number(d.n) - 1], tg = rw && rw.querySelector('[data-loc]');
+    if (tg) { locate(tg.dataset.loc); }
+    return;
+  }
+  else if (d.refresh) { refresh(); return; }
+  else if (d.shownew) { loadDash().then(function () { $('feed').scrollTop = 0; }); return; }
+  else if (d.allread) { allRead(); return; }
+  else if (d.closebrief) { briefOn = false; }
+  else if (d.more) { lim += 15; }
+  else if (d.rtab) { rtab = d.rtab; rightR(); return; }
+  else if (d.qa) { send(d.qa,d.quick); return; }
+  else if (d.sug) { send(d.sug); return; }
+  else if (d.sbt) { sbOpen = !sbOpen; try { localStorage.setItem('sbOpen2', sbOpen ? '1' : '0'); } catch (x) {} editing = null; renderSb(); return; }
+  else if (d.act === 'new') { newChat(); return; }
+  else if (d.del) { delSession(d.del); return; }
+  else if (d.ren2) { if (!sbOpen) { sbOpen = true; } editing = d.ren2; renderSb(); return; }
+  else if (d.sid) { if (!same(cur, d.sid)) { selectSession(d.sid); } else { rtab = 'chat'; rightR(); } return; }
+  else if (d.clrctx) { CTX = null; rightR(true); return; }
+  else if (d.id !== undefined) { selItem(Number(d.id)); return; }
+  render();
+});
+function trySend() { var v = $('q').value.trim(); if (!v || stream) { return; } send(v); }
+$('sbtn').addEventListener('click', function () { if (stream) { cancel(); } else { trySend(); } $('q').focus(); });
+$('q').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.isComposing) { trySend(); } else if (e.key === 'Escape') { if (stream) { cancel(); } else { $('q').blur(); } }
+});
+$('q').addEventListener('input', btn);
+function updateSearch(e){if(e.target.id==='sq'&&!e.isComposing){F.q=e.target.value;lim=15;feedR()}}
+document.addEventListener('input',updateSearch);document.addEventListener('compositionend',updateSearch);
+
+
+/* Current home: events, combinable facets, contextual help and durable push settings. */
+var NF={assets:new Set(),levels:new Set(),directions:new Set(),sources:new Set(),verification:new Set()};
+var HELP={search:'<b>搜索用法</b><p>搜索标题、摘要、影响分析、币种和信源，覆盖聚合事件内所有已加载报道。英文不区分大小写。</p><p>空格表示同时包含：<button data-example="BTC ETF">BTC ETF</button>；英文双引号表示完整短语：<button data-example="&quot;现货 ETF&quot;">"现货 ETF"</button>；英文减号排除词：<button data-example="BTC -诉讼">BTC -诉讼</button>。可组合：BTC "现货 ETF" -诉讼。</p><p>搜索同时遵循筛选条件。无结果时减少关键词或移除条件；尚未加载的旧消息需先加载。</p>',filter:'<b>组合筛选</b><p>同一行多选为任一匹配，不同行同时满足。只看未读和待跟进同时选中时，两项均须满足。搜索命中事件内任一报道后展示完整事件，信源筛选不隐藏其余关联证据。</p>',overview:'<b>重点速览规则</b><p>紧急事件：原始发布后 6 小时内，不限方向。重要利空 / 利好：24 小时内。原始发布时间缺失的消息留在完整消息流，不推送。刷新、采集、已读和重复报道不重置时效；超时不代表风险解除。</p><p>同一事件聚合展示：新消息使用模型提取的具体事件标识，旧消息按同日相同标题保守合并；不会仅按币种合并。聚合限当前已加载消息，模型关联仍可能存在偏差。</p><p>排序：风险升级 → 实质进展 → 常规重点，同级按最新报道排序。核实与排序依据来自初筛输入，保留证据缺口；缺少依据时显示待核实。多信源报道不代表独立证实。</p><p>分类不折叠；内容超出可用高度时内部滚动，底部箭头提示还有消息。下方完整事件流按最新报道倒序。</p>',stream:'<b>事件流</b><p>同一事件合并展示，点击信源 / 报道可核对原文。点击标题加入会话，提问时一并参考该事件当前已加载的报道，最多 20 条。已读不影响保留或推送。</p>',push:'<b>重点消息推送</b><p>默认全部重点；可选仅紧急或关注币种的重点。紧急立即入队，重要利空 / 利好按 5 / 10 / 15 分钟合并。实际送达受渠道状态影响。</p><p>按原始发布时间检查 6 / 24 小时时效，发送与重试前复查，过时不发送。同一事件重复转述不再通知，明确风险升级或实质进展才允许再次通知，并保留更新内容。</p><p>开启、修改范围后仅通知此后发布的新重点，不补发原有消息；保存设置会清除旧的待发重点。推送范围与首页筛选、搜索、已读状态独立。系统异常在应用内保留记录，不占用微信互动额度；微信自动推送仅发送紧急事件，不设额外条数上限；重复、过期和已降级事件不发送。</p>',chat:'<b>分析与追问</b><p>可加入多个事件进行对比，移出误选事件后，后续追问不再引用它；已发送问答保留。拖动分隔线调整比例，右上角收起对话。微信与应用可继续同一会话，应用回答不会自动发往微信。</p>'};
+function helpB(key){return '<button class="help-trigger" data-help="'+key+'" aria-label="'+({search:'搜索用法',filter:'筛选规则',overview:'重点速览规则',stream:'消息流规则',push:'推送规则',chat:'对话规则'}[key])+'" aria-expanded="false" aria-controls="home-help">?</button>'}
+function official(it){try{var h=new URL(it.url).hostname;return /(^|\.)(sec\.gov|federalreserve\.gov|binance\.com|okx\.com|solana\.com|status\.solana\.com)$/.test(h)}catch(e){return false}}
+function verification(it){if(it.focus&&it.focus.source_confirmed&&it.focus.basis&&official(it))return '官方已确认';return it.reports&&new Set(it.reports.map(function(x){return x.s+(x.a||'')})).size>1?'多信源报道':'待核实'}
+function eventRows(){var groups=new Map();D.items.forEach(function(x){var k=x.event_key||'item:'+x.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});return Array.from(groups.values()).map(function(rows){var ranked=rows.slice().sort(function(a,b){return ((a.focus||{}).priority??2)-((b.focus||{}).priority??2)||ms(b)-ms(a)}),head=ranked[0],canonical=rows.find(function(r){return CARDS.some(function(c){return same(c.id,r.id)})})||rows.slice().sort(function(a,b){return a.id-b.id})[0],pub=rows.filter(function(r){return r.published_at}).map(function(r){return Date.parse(r.published_at)});return Object.assign({},head,{id:canonical.id,reports:rows,assets:Array.from(new Set(rows.flatMap(function(r){return r.assets||[]}))),unread:rows.some(function(r){return r.unread}),starred:rows.some(function(r){return r.starred}),originalAt:pub.length?Math.min.apply(null,pub):0,latestAt:Math.max.apply(null,rows.map(ms))})})}
+function groupKey(e){var age=Date.now()-e.originalAt;if(!e.originalAt||age<0)return '';return e.lv==='u'&&age<21600000?'urgent':e.lv==='i'&&age<86400000&&e.dc==='dn'?'risk':e.lv==='i'&&age<86400000&&e.dc==='up'?'positive':''}
+function focusSort(a,b){return ((a.focus||{}).priority??2)-((b.focus||{}).priority??2)||b.latestAt-a.latestAt}
+var rawById=byId;byId=function(id){return eventRows().find(function(e){return e.reports.some(function(r){return same(r.id,id)})})||rawById(id)};
+function tokenMatch(text){var tokens=Array.from(F.q.matchAll(/(-?)(?:"([^"]+)"|(\S+))/g));return tokens.every(function(t){var has=text.includes((t[2]||t[3]).toLowerCase());return t[1]? !has:has})}
+m=function(it){var rs=it.reports||[it];if(NF.assets.size&&!(it.assets||[]).some(function(a){return NF.assets.has(a)}))return false;if(NF.levels.size&&!NF.levels.has(it.lv))return false;if(NF.directions.size&&!NF.directions.has(it.dc))return false;if(NF.sources.size&&!rs.some(function(r){return NF.sources.has(r.s)}))return false;if(NF.verification.size&&!NF.verification.has(verification(it)))return false;if(F.unread&&!it.unread||F.star&&!it.starred)return false;if(F.asset&&!(it.assets||[]).includes(F.asset)||F.lv==='u'&&it.lv!=='u'||F.lv==='ui'&&!['u','i'].includes(it.lv)||F.dir&&it.dc!==F.dir||F.src&&!rs.some(function(r){return r.s===F.src})||F.acc&&!rs.some(function(r){return r.a===F.acc})||F.day!==null&&!rs.some(function(r){return r.d===F.day}))return false;return tokenMatch(rs.flatMap(function(r){return[r.t,r.ot,r.sz,r.summary,r.impact,r.sn,r.a,(r.assets||[]).join(' ')]}).filter(Boolean).join(' ').toLowerCase())};
+var oldClear=clearF;clearF=function(){Object.values(NF).forEach(function(s){s.clear()});oldClear()};
+var facetOptions=function(){return [['assets','币种',Array.from(new Set(D.items.flatMap(function(r){return r.assets||[]}))).sort().map(function(v){return[v,v]})],['levels','级别',Object.entries(LV)],['directions','方向',Object.entries(DIR)],['sources','信源',Array.from(new Map(D.items.map(function(r){return[r.s,r.sn||r.s]})).entries())],['verification','核实',['官方已确认','多信源报道','待核实'].map(function(v){return[v,v]})]]};
+flR=function(){var h='<div class="filter-head"><b>组合筛选</b>'+helpB('filter')+'</div>';h+=facetOptions().map(function(row){return '<div class="facet-row"><span class="facet-label">'+row[1]+'</span><button data-nf="'+row[0]+'" data-value="" class="'+(!NF[row[0]].size?'active':'')+'">不限</button>'+row[2].map(function(o){return '<button data-nf="'+row[0]+'" data-value="'+esc(o[0])+'" aria-pressed="'+NF[row[0]].has(o[0])+'" class="'+(NF[row[0]].has(o[0])?'active':'')+'">'+esc(o[1])+'</button>'}).join('')+'</div>'}).join('');h+='<div class="facet-row"><span class="facet-label">状态</span><button data-fu="1" aria-pressed="'+F.unread+'">'+(F.unread?'✓ ':'')+'只看未读</button><button data-fs="1" aria-pressed="'+F.star+'">'+(F.star?'✓ ':'')+'待跟进</button></div>';$('fl').innerHTML=h};
+function evidence(e){var rs=e.reports||[e];return '<details class="home-evidence" data-event="'+e.id+'"><summary>'+new Set(rs.map(function(r){return r.s+(r.a||'')})).size+' 个信源 · '+rs.length+' 条报道</summary><div><p><b>最新进展：</b>'+esc((e.focus||{}).change||'暂无明确实质更新')+'</p><p><b>核实依据：</b>'+esc((e.focus||{}).basis||'尚无足够原始证据；请核对来源，不能仅凭标题确认。')+'</p><p class="mu">状态依据已采集原文和初筛分析，不代表独立外部核验或价格预测。</p>'+rs.slice().sort(function(a,b){return ms(b)-ms(a)}).map(function(r){return '<article><b>'+esc(sname(r))+'</b> · '+rel(r)+'<p>'+esc(r.t)+'</p><button data-report-open="'+r.id+'">打开原文 ↗</button></article>'}).join('')+'</div></details>'}
+markRead=function(e){var rs=e.reports||[e];rs.filter(function(r){return r.unread}).forEach(function(r){api('/api/v1/items/'+r.id+'/read',{}).then(function(){r.unread=false;var c=CACHE[r.id];if(c)c.unread=false;feedR()}).catch(fail)})};
+toggleStar=function(id){var e=byId(id);if(!e)return;var desired=!e.starred,rs=(e.reports||[e]).filter(function(r){return !!r.starred!==desired});Promise.all(rs.map(function(r){return api('/api/v1/items/'+r.id+'/star',{}).then(function(v){r.starred=!!v.starred;if(CACHE[r.id])CACHE[r.id].starred=r.starred})})).then(function(){toast(desired?'已加入待跟进':'已取消跟进');render()}).catch(fail)};
+setLevel=function(id,l){var e=byId(id);if(!e)return;Promise.all((e.reports||[e]).map(function(r){return api('/api/v1/items/'+r.id+'/level',{level:LVAPI[l]}).then(function(){r.lv=l;if(CACHE[r.id])CACHE[r.id].lv=l})})).then(function(){toast('已调整事件级别');render()}).catch(fail)};
+var oldRow=row;row=function(it,compact){var v=verification(it),base=oldRow(it,compact);base=base.replace('<div class="item-meta">','<div class="item-meta"><span class="verification-badge '+(v==='官方已确认'?'confirmed':'pending')+'">'+v+'</span>');var change=(it.focus||{}).change;if(change){base=base.replace('<div class="item-meta">','<div class="item-meta"><span class="progress-badge" title="'+esc(change)+'">'+((it.focus||{}).priority===0?'风险升级':'新进展')+'</span>');base=base.replace('</button>','</button><p class="event-change">'+esc(change)+'</p>')}return base.replace('</article>',evidence(it)+'</article>')};
+groupsH=function(list){return '<div class="group-grid">'+[['urgent','紧急事件','最近 6 小时 · 紧急级，不分方向'],['risk','重要利空','最近 24 小时 · 非紧急的重要负向事件'],['positive','重要利好','最近 24 小时 · 非紧急的重要正向事件']].map(function(g){var rows=list.filter(function(e){return groupKey(e)===g[0]}).sort(focusSort);return '<section class="group '+g[0]+'"><div class="group-head"><b>'+g[1]+'</b><span>'+rows.length+' 个事件</span><p>'+g[2]+'</p></div><div class="group-list" role="region" tabindex="0" aria-label="'+g[1]+'，可滚动">'+(rows.length?rows.map(function(e){return row(e,true)}).join(''):'<p class="empty">暂无符合条件的事件</p>')+'</div><div class="group-scroll-hint" aria-hidden="true">还有消息 ↓</div></section>'}).join('')+'</div>'};
+function scrollHints(){document.querySelectorAll('.group').forEach(function(g){var l=g.querySelector('.group-list'),h=g.querySelector('.group-scroll-hint');if(l&&h)h.hidden=l.scrollHeight-l.clientHeight-l.scrollTop<3})}
+function fitGroups(){var grid=document.querySelector('.group-grid');if(!grid)return;var cols=getComputedStyle(grid).gridTemplateColumns.split(' ').length,budget=Math.max(330,Math.min(innerHeight-10,$('feed').getBoundingClientRect().bottom)-grid.getBoundingClientRect().top-34),groups=Array.from(grid.querySelectorAll('.group'));groups.forEach(function(g,i){var cap=cols===1?(budget-18)/3:(budget-9)*(i===0?.43:.57),header=g.querySelector('.group-head').getBoundingClientRect().height,first=g.querySelector('.it'),minBody=first?Math.min(first.getBoundingClientRect().height+20,160):40;g.style.setProperty('--group-height',Math.max(header+minBody,Math.floor(cap))+'px')});scrollHints()}
+
+feedR=function(){var f=$('feed'),top=f.scrollTop,openEvidence=new Set(Array.from(f.querySelectorAll('.home-evidence[open]'),function(x){return x.dataset.event})),scrolls=Array.from(f.querySelectorAll('.group-list'),function(x){return x.scrollTop}),list=eventRows().filter(m).sort(function(a,b){return b.latestAt-a.latestAt}),reports=list.reduce(function(n,e){return n+e.reports.length},0),ok=D.sources.filter(function(s){return s.state==='ok'}).length,active=Object.values(NF).reduce(function(n,s){return n+s.size},0)+(F.unread?1:0)+(F.star?1:0);shown=list.slice(0,lim);var h='<div class="feed-heading"><div><h2>消息雷达 <span>'+list.length+' 个事件 · '+reports+' 条报道</span><span class="srcsum" id="srcsum"></span></h2><div class="channel-status compact" data-channel-live="wechat-ilink" role="status" aria-live="polite">微信状态同步中…</div></div><div class="refresh-stack"><span id="countdown" role="timer"></span><button data-refresh="1" '+(refreshing?'disabled':'')+'>'+SVG_RF+' 一键刷新消息</button></div></div><p class="mu refresh-result" role="status">'+esc(updTxt||'每 30 秒同步已采集消息')+'</p><div class="home-search"><input id="sq" type="search" aria-label="搜索消息" placeholder="输入想查找的消息" value="'+esc(F.q)+'"><button id="filter-toggle" popovertarget="fl">筛选'+(active?' · '+active:'')+' ▾</button>'+helpB('search')+'</div>';
+if(active||F.q||F.asset||F.src||F.dir||F.lv!=='all'||F.day!==null){h+='<div class="home-summary"><b>找到 '+list.length+' 个事件</b>';facetOptions().forEach(function(r){r[2].forEach(function(o){if(NF[r[0]].has(o[0]))h+='<button data-nf="'+r[0]+'" data-value="'+esc(o[0])+'">'+r[1]+'：'+esc(o[1])+' ×</button>'})});if(F.q)h+='<span>搜索：'+esc(F.q)+'</span>';h+='<button id="filter-reset">清空全部</button></div>'}
+if(D.error)h+='<div class="ban">'+esc(D.error)+'</div>';else if(D.degraded)h+='<div class="ban">部分分析暂不可用，核实状态与重点分类可能不完整。</div>';
+h+='<div class="overview-heading"><b>重点速览</b><span class="mu small">未读 '+list.filter(function(e){return e.unread}).length+' · 紧急 '+list.filter(function(e){return groupKey(e)==='urgent'}).length+'</span><button id="push-settings-open">推送设置</button>'+helpB('overview')+'</div>'+groupsH(list)+'<div class="stream-heading"><b>全部事件 '+list.length+'</b><span class="mu">已加载事件按最新报道排序</span><button data-allread="1">当前结果标为已读</button>'+helpB('stream')+'</div><div class="message-stream">'+shown.map(function(e){return row(e,false)}).join('')+'</div>';
+if(!list.length)h+='<div class="empty">没有符合条件的事件，可减少关键词或清空筛选。</div>';if(list.length>lim)h+='<button class="more" data-more="1">继续加载事件</button>';else if(historyMore)h+='<button class="more" data-history="1" '+(historyBusy?'disabled':'')+'>'+(historyBusy?'正在加载…':'加载更早消息')+'</button>';else h+='<p class="mu small">已显示当前已加载范围全部事件</p>';var searchStart=h.indexOf('<div class="home-search">'),searchEnd=h.indexOf('</div>',searchStart)+6;
+if(!f.querySelector('#feed-results')){f.innerHTML='<div class="feed-top">'+h.slice(0,searchStart)+'</div>'+h.slice(searchStart,searchEnd)+'<div id="feed-results">'+h.slice(searchEnd)+'</div>'}else{f.querySelector('.feed-top').innerHTML=h.slice(0,searchStart);f.querySelector('#feed-results').innerHTML=h.slice(searchEnd);if($('sq').value!==F.q)$('sq').value=F.q;$('filter-toggle').textContent='筛选'+(active?' · '+active:'')+' ▾'}
+f.querySelectorAll('.home-evidence').forEach(function(x){x.open=openEvidence.has(x.dataset.event)});f.scrollTop=top;srcSum();window.AppStatus?.paint();countdown();fitGroups();f.querySelectorAll('.group-list').forEach(function(x,i){x.scrollTop=scrolls[i]||0});scrollHints();if($('push-settings').open)updatePushPreview(true)};
+var oldDet=detR;detR=function(id){var e=byId(id);return (e?'<p><span class="verification-badge">'+verification(e)+'</span></p>'+evidence(e):'')+oldDet(id)};
+var oldRight=rightR;rightR=function(quiet){oldRight(quiet);var rt=$('rt');if(rt&&!rt.querySelector('[data-help]'))rt.insertAdjacentHTML('beforeend',helpB('chat'))};
+var helpTimer,helpTrigger;
+function closeHomeHelp(){var h=$('home-help');if(h.matches(':popover-open'))h.hidePopover();if(helpTrigger)helpTrigger.setAttribute('aria-expanded','false')}
+function showHomeHelp(b){clearTimeout(helpTimer);var h=$('home-help');closeHomeHelp();helpTrigger=b;h.innerHTML=HELP[b.dataset.help]||'';h.showPopover();b.setAttribute('aria-expanded','true');var r=b.getBoundingClientRect();h.style.left=Math.max(12,Math.min(r.right-h.offsetWidth,innerWidth-h.offsetWidth-12))+'px';h.style.top=Math.max(12,Math.min(r.bottom+7,innerHeight-h.offsetHeight-12))+'px'}
+document.addEventListener('mouseover',function(e){var b=e.target.closest('[data-help]');if(b)showHomeHelp(b);if(e.target.closest('#home-help'))clearTimeout(helpTimer)});
+document.addEventListener('mouseout',function(e){if(e.target.closest('[data-help],#home-help'))helpTimer=setTimeout(function(){if(!document.querySelector('#home-help:hover,#home-help:focus-within,[data-help]:hover,[data-help]:focus-visible'))closeHomeHelp()},220)});
+document.addEventListener('focusin',function(e){var b=e.target.closest('[data-help]');if(b)showHomeHelp(b)});
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('#home-help,[data-help]'))closeHomeHelp()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('home-help').matches(':popover-open')){e.preventDefault();closeHomeHelp()}});
+document.addEventListener('scroll',function(e){if(e.target.matches&&e.target.matches('.group-list'))scrollHints()},true);
+document.addEventListener('toggle',function(e){if(e.target.matches&&e.target.matches('.home-evidence'))requestAnimationFrame(scrollHints)},true);
+window.addEventListener('resize',fitGroups);new ResizeObserver(fitGroups).observe($('feed'));
+$('fl').addEventListener('toggle',function(){var b=$('filter-toggle'),p=$('fl');if(!b||!p.matches(':popover-open'))return;var r=b.getBoundingClientRect();p.style.left=Math.max(12,Math.min(r.right-p.offsetWidth,innerWidth-p.offsetWidth-12))+'px';p.style.top=Math.max(12,Math.min(r.bottom+6,innerHeight-p.offsetHeight-12))+'px'});
+var pushSaved;
+function pushDraft(){return {enabled:$('push-enabled').checked,scope:document.querySelector('[name="push-scope"]:checked').value,assets:Array.from(document.querySelectorAll('[name="push-asset"]:checked'),function(x){return x.value}),interval:Number($('push-interval').value)}}
+function updatePushPreview(preserveError){var d=pushDraft();$('push-options').disabled=!d.enabled;$('push-assets').hidden=d.scope!=='followed';$('push-interval').disabled=!d.enabled||d.scope==='urgent';var list=eventRows().filter(function(e){return groupKey(e)&&(d.scope!=='urgent'||groupKey(e)==='urgent')&&(d.scope!=='followed'||e.assets.some(function(a){return d.assets.includes(a)}))});$('push-preview-summary').textContent=d.enabled?'当前匹配 '+list.length+' 个事件 · 紧急即时，重要每 '+d.interval+' 分钟合并':'推送已关闭';$('push-preview-list').innerHTML=d.enabled?list.map(function(e){return '<li>'+esc(e.t)+'</li>'}).join(''):'';if(preserveError!==true)$('push-error').textContent=''}
+function openPush(){closeHomeHelp();api('/api/v1/push/settings').then(function(d){pushSaved=d;$('push-enabled').checked=d.enabled;document.querySelector('[name="push-scope"][value="'+d.scope+'"]').checked=true;var assets=Array.from(new Set(WATCH.concat(D.items.flatMap(function(e){return e.assets||[]})).concat(d.assets))).sort();$('push-assets').querySelector('.push-asset-list').innerHTML=assets.map(function(a){return '<label><input type="checkbox" name="push-asset" value="'+esc(a)+'" '+(d.assets.includes(a)?'checked':'')+'>'+esc(a)+'</label>'}).join('');$('push-interval').value=d.interval;updatePushPreview();$('push-settings').showModal()}).catch(fail)}
+function closePush(){closeHomeHelp();$('push-settings').close()}
+$('push-close').onclick=closePush;$('push-cancel').onclick=closePush;$('push-settings').addEventListener('close',closeHomeHelp);$('push-form').addEventListener('change',updatePushPreview);
+$('push-form').onsubmit=function(e){e.preventDefault();var d=pushDraft();if(d.enabled&&d.scope==='followed'&&!d.assets.length){$('push-error').textContent='请至少选择一个关注币种';return}var button=this.querySelector('[type="submit"]');button.disabled=true;api('/api/v1/push/settings',d).then(function(p){pushSaved=p;closePush();toast('推送设置已保存；旧消息不补推')}).catch(function(e){$('push-error').textContent=e.message}).finally(function(){button.disabled=false})};
+document.addEventListener('click',function(e){var b=e.target.closest('[data-help],[data-nf],[data-example],[data-report-open],#filter-reset,#push-settings-open');if(!b)return;var d=b.dataset;if(d.help){showHomeHelp(b);return}if(d.nf){var set=NF[d.nf];if(!d.value)set.clear();else if(set.has(d.value))set.delete(d.value);else set.add(d.value);lim=15;flR();feedR();if($('fl').matches(':popover-open')){var next=Array.from($('fl').querySelectorAll('[data-nf]')).find(function(b){return b.dataset.nf===d.nf&&b.dataset.value===d.value});if(next)next.focus({preventScroll:true})}return}if(d.example!==undefined){F.q=d.example;feedR();closeHomeHelp();$('sq').focus();return}if(d.reportOpen){openOrig(d.reportOpen);return}if(b.id==='filter-reset'){clearF();flR();feedR();return}if(b.id==='push-settings-open')openPush()});
+
+render(); renderSb(); btn();
+Promise.all([loadDash(),loadSessions()]).then(function(){
+  if(location.hash==='#push')openPush();
+  var id; try{id=localStorage.getItem('activeSessionV17');}catch(e){}
+  if(id && SES.some(function(s){return same(s.id,id);})) selectSession(id,true);
+});
+setInterval(function(){if(!stream && !contextBusy && !document.hidden)loadSessions();},5000);
+setInterval(function(){countdown();if(Date.now() >= nextRefresh && !refreshing) refresh();},1000);
+$('feed').addEventListener('scroll',function(){var f=$('feed');if(f.scrollTop+f.clientHeight>=f.scrollHeight-80 && shown.length < eventRows().filter(m).length){lim+=15;feedR();}else if(f.scrollTop+f.clientHeight>=f.scrollHeight-80 && historyMore){loadHistory();}});
+window.addEventListener('pageshow', function (e) { if (e.persisted) { location.reload(); } });
+})();
+</script>
+{% endraw %}
+{% endblock %}

@@ -1,0 +1,32 @@
+name = "web"
+version = "0.1.0"
+description = "本机网页界面：消息流、追问、统计，以及插件与各项管理"
+permissions = ["store"]
+tables = ["item_states", "prefs", "chat_sessions", "chat_turns"]
+
+[requires]
+hub-admin = "1"
+auth = "1"
+store = "1"
+source-status = { version = "1", optional = true }
+rulebook = { version = "1", optional = true }
+screening = { version = "1", optional = true }
+item-query = { version = "1", optional = true }
+dispatch = { version = "1", optional = true }
+secrets = { version = "1", optional = true }
+llm = { version = "1", optional = true }
+agent = { version = "1", optional = true }
+feed-admin = { version = "1", optional = true }
+x-admin = { version = "1", optional = true }
+channel = { version = "1", optional = true, all = true }
+
+[events]
+subscribe = ["llm.delta"]
+publish = ["llm.cancel"]
+ephemeral = ["llm.cancel"]
+
+[config.fields.proxy_test_url]
+type = "string"
+label = "代理测试地址"
+default = ""
+help = "仅用于测试和调试：设置页测试连接请求的地址，留空使用默认地址"

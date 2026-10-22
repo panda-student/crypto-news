@@ -1,0 +1,28 @@
+name = "agent"
+version = "0.1.0"
+description = "追问：用已收集的消息回答用户的问题，回答附原文链接；只读，不执行命令"
+permissions = ["store"]
+tables = ["agent_replies", "conversation_turns"]
+
+[requires]
+store = "1"
+llm = "1.1"
+item-query = "1"
+screening = { version = "1", optional = true }
+channel = { version = "1", all = true }
+
+[provides]
+agent = "1.1"
+
+[events]
+subscribe = ["user.message"]
+
+[config.fields.lookback_days]
+type = "integer"
+label = "检索最近几天的消息"
+default = 14
+
+[config.fields.max_materials]
+type = "integer"
+label = "每次最多引用的消息条数"
+default = 20

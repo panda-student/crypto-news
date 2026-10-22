@@ -1,0 +1,21 @@
+name = "collect"
+version = "0.1.0"
+description = "采集调度、去重入库、断流报警"
+permissions = ["store"]
+tables = ["sources", "raw_items"]
+
+[provides]
+source-status = "1.1"
+item-query = "1.0"
+
+[requires]
+store = "1"
+source = { version = "1", all = true }
+
+[events]
+publish = ["item.collected", "source.failed", "source.recovered"]
+
+[config.fields.tick_secs]
+type = "integer"
+label = "调度轮询间隔（秒）"
+default = 30

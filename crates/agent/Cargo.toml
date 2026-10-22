@@ -1,0 +1,18 @@
+[package]
+license = "Apache-2.0"
+name = "agent"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "追问：用已收集的消息回答用户从渠道发来的问题，附原文链接"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }

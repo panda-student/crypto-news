@@ -1,0 +1,12 @@
+[package]
+license = "Apache-2.0"
+name = "contracts"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "官方事件、服务接口与数据结构（只增不删）"
+
+[dependencies]
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+time = { version = "0.3", default-features = false, features = ["std", "formatting", "parsing"] }

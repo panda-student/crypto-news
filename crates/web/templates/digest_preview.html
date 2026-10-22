@@ -1,0 +1,7 @@
+<div class="preview">
+<p class="muted">当前素材共 {{ item_count }} 条。</p>
+<h3>企业微信（markdown 原文）</h3>
+{% for t in markdown %}<pre>{{ t }}</pre>{% else %}<p class="muted">无内容</p>{% endfor %}
+<h3>微信（纯文本）</h3>
+{% for t in plain %}<pre>{{ t }}</pre>{% else %}<p class="muted">无内容</p>{% endfor %}
+</div>

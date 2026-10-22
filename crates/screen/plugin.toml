@@ -1,0 +1,40 @@
+name = "screen"
+version = "0.1.0"
+description = "初筛与简析：按规则手册给新消息分四级，紧急和重要级简析影响"
+permissions = ["store"]
+tables = ["screenings"]
+
+[provides]
+screening = "1.1"
+
+[requires]
+store = "1"
+llm = "1"
+rulebook = "1"
+item-query = "1"
+
+[events]
+publish = ["item.screened", "push.pending"]
+subscribe = ["item.collected"]
+
+[config.fields.batch_size]
+type = "integer"
+label = "每批初筛条数"
+default = 10
+help = "每批最多 10 条，控制输出并降低截断重试成本"
+
+[config.fields.batch_interval_secs]
+type = "integer"
+label = "初筛间隔（秒）"
+default = 20
+
+[config.fields.backfill_hours]
+type = "integer"
+label = "补抓判定（小时）"
+default = 2
+help = "发布时间早于现在减去该小时数的消息按补抓处理：不推快讯"
+
+[config.fields.max_attempts]
+type = "integer"
+label = "模型失败次数上限"
+default = 3

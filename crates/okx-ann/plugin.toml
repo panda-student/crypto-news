@@ -1,0 +1,12 @@
+name = "okx-ann"
+version = "0.1.0"
+description = "OKX 公告信源"
+permissions = ["network"]
+
+[provides]
+source = "1.0"
+
+[config.fields.interval_secs]
+type = "integer"
+label = "抓取间隔（秒）"
+default = 120

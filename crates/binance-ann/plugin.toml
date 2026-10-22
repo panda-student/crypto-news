@@ -1,0 +1,17 @@
+name = "binance-ann"
+version = "0.1.0"
+description = "Binance 公告信源：新币上线等"
+permissions = ["network"]
+
+[provides]
+source = "1.0"
+
+[config.fields.interval_secs]
+type = "integer"
+label = "抓取间隔（秒）"
+default = 120
+
+[config.fields.catalog_ids]
+type = "string_list"
+label = "公告分类 ID"
+help = "整数数组，48 为新币上线"

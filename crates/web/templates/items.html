@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}消息{% endblock %}
+{% block body %}
+<h1>最近消息</h1>
+<form method="get" action="/items" class="bar">
+<input type="text" name="text" value="{{ text }}" placeholder="搜索标题或摘要">
+<select name="level">
+<option value="">全部级别</option>
+{% for o in [["urgent","紧急"],["important","重要"],["normal","一般"],["archive","归档"]] %}<option value="{{ o[0] }}"{% if level == o[0] %} selected{% endif %}>{{ o[1] }}</option>{% endfor %}
+</select>
+<button type="submit">筛选</button>
+</form>
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<table>
+<thead><tr><th>ID</th><th>消息</th><th>级别</th><th>理由 / 影响</th><th>状态</th><th>时间</th></tr></thead>
+<tbody>
+{% for r in rows %}{% include "item_row.html" %}
+{% else %}
+<tr><td colspan="6" class="muted">暂无消息</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endblock %}

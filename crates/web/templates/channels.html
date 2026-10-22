@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}渠道{% endblock %}
+{% block body %}
+<h1>推送渠道</h1>
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<div class="cards">
+{% for c in channels %}
+<div class="card">
+<h2>{% if c.name %}{{ c.name }}{% else %}{{ c.id }}{% endif %} <span class="muted">{{ c.id }}</span></h2>
+{% if c.error %}<p class="err">{{ c.error }}</p>{% else %}
+<dl>
+<dt>状态</dt><dd><span class="{% if c.state == "ok" %}s-ok{% else %}s-warn{% endif %}">{{ c.state_label }}</span></dd>
+<dt>格式</dt><dd>{{ c.format_label }}</dd>
+<dt>备用渠道</dt><dd>{% if c.backup %}是{% else %}否{% endif %}</dd>
+<dt>剩余额度</dt><dd>{% if c.quota_left is none %}不限{% else %}{{ c.quota_left }}{% endif %}</dd>
+<dt>到期时间</dt><dd>{% if c.expires_at %}{{ c.expires_at }}{% else %}-{% endif %}</dd>
+<dt>说明</dt><dd>{% if c.detail %}{{ c.detail }}{% else %}-{% endif %}</dd>
+</dl>
+{% endif %}
+<p>
+<button hx-post="/api/v1/channels/{{ c.id }}/test" hx-target="#test-{{ c.id }}" hx-swap="innerHTML">测试发送</button>
+{% if c.state != "ok" %}<button class="primary" hx-post="/api/v1/channels/{{ c.id }}/bind" hx-target="#slot-{{ c.id }}" hx-swap="innerHTML">绑定</button>{% endif %}
+<span id="test-{{ c.id }}"></span>
+</p>
+<div id="slot-{{ c.id }}"></div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

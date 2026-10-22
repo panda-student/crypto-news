@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} - 消息面分析</title>
+<link rel="icon" type="image/svg+xml" href="/assets/app-icon.svg">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/htmx.min.js"></script>
+<script defer src="/assets/app-status.js"></script>
+<script defer src="/assets/mcp-ui.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+<header>
+<strong class="brand"><img src="/assets/app-icon.svg" alt="" width="28" height="28">消息面分析</strong>
+{% block topbar %}{% endblock %}
+<span class="sp"></span>
+{% block topright %}{% endblock %}<a href="/settings#s-mcp" data-mcp-notice hidden></a>
+<a class="ib{% if nav == "settings" %} active{% endif %}" href="/settings" title="设置"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg> 设置</a>
+</header>
+<div id="toast" class="note" hidden></div>
+<main>
+{% if nav and nav != "feed" and nav != "stats" and nav != "settings" %}<p class="back"><a href="/settings">← 返回</a></p>{% endif %}
+{% block body %}{% endblock %}
+</main>
+<script>
+(function () {
+  // 把本机时区（东为正的分钟数）写进 cookie，服务端按它渲染本地时间。
+  var off = -new Date().getTimezoneOffset();
+  var m = document.cookie.match(/(?:^|; )tz=(-?\d+)/);
+  if (!m) {
+    document.cookie = 'tz=' + off + '; path=/; max-age=31536000; SameSite=Lax';
+    try {
+      if (!sessionStorage.getItem('tzr')) { sessionStorage.setItem('tzr', '1'); location.reload(); }
+    } catch (e) {}
+  } else if (parseInt(m[1], 10) !== off) {
+    document.cookie = 'tz=' + off + '; path=/; max-age=31536000; SameSite=Lax';
+  }
+})();
+document.body.addEventListener('htmx:responseError', function (e) {
+  var t = document.getElementById('toast');
+  t.textContent = (e.detail.xhr && e.detail.xhr.responseText) || '操作失败';
+  t.hidden = false;
+});
+document.body.addEventListener('htmx:beforeRequest', function (e) {
+  var t = document.getElementById('toast');
+  if (e.detail.elt && e.detail.elt.id !== 'src-summary') { t.hidden = true; }
+});
+</script>
+</body>
+</html>

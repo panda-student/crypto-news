@@ -1,0 +1,25 @@
+[package]
+license = "Apache-2.0"
+name = "web"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "本机网页界面：插件与信源状态、权限确认"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "query", "form", "json"] }
+minijinja = { version = "2", default-features = false, features = ["builtins", "macros", "multi_template", "serde"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros", "sync", "time", "net"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tower = { version = "0.5", default-features = false, features = ["util"] }
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros", "net", "time"] }
+reqwest = { version = "0.12", default-features = false }
+store = { path = "../store" }
+agent = { path = "../agent" }

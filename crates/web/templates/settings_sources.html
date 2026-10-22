@@ -1,0 +1,46 @@
+{% from "settings_icons.html" import ic %}
+{% macro x_switch(p) %}{% if p %}<span class="mu mini">采集</span><button type="button" class="sw{% if p.enabled %} on{% endif %}" role="switch" aria-checked="{{ 'true' if p.enabled else 'false' }}" aria-label="X账号采集" data-plugin-switch="x-browser" hx-post="/settings/x/enabled" hx-vals='{"enabled":"{{ "false" if p.enabled else "true" }}"}' hx-target="#sec-src" hx-swap="innerHTML" hx-disabled-elt="this"></button>{% endif %}{% endmacro %}
+{% macro sform(s) %}
+<form class="cd fm" hx-post="/settings/sources/save" hx-target="#sec-src" hx-swap="innerHTML" autocomplete="off">
+<div class="hd"><b>{{ s.name or "新信源" }}</b></div>
+<input type="hidden" name="id" value="{{ s.id }}">
+<label>名称</label><input name="name" value="{{ s.name }}" required>
+<label>RSS 地址</label><input name="url" value="{{ s.url }}" placeholder="https://" required>
+<div class="acts"><button type="submit" class="primary">保存</button><button type="button" hx-get="/settings/sources" hx-target="#sec-src" hx-swap="innerHTML">取消</button></div>
+</form>
+{% endmacro %}
+{% if flash %}<div class="fl{% if not flash_ok %} bad{% endif %}">{{ flash }}</div>{% endif %}
+{% if error %}<p class="note">{{ error }}</p>{% endif %}
+<div class="source-summary" data-source-summary="detail" role="status" aria-live="polite" title="与首页使用同一份采集状态；每个订阅、公告源和X账号分别计数。X登录状态不等于各账号采集正常。">信源状态同步中…</div>
+<div class="grid sources-grid">
+{% if not x.available %}
+<div class="cd x-panel"><div class="hd">{{ ic('x') }}<b>X 账号管理</b><span class="bd">{{ x.plugin.badge if x.plugin else '未运行' }}</span>{{ x_switch(x.plugin) }}</div><div class="mu">X 采集插件未运行。{% if x.plugin %}开启上方开关后可管理关注账号，原有列表会保留。{% else %}请检查 X 插件的运行状态。{% endif %}</div></div>
+{% else %}
+<div class="cd x-panel{% if not x.browser %} off{% endif %}" id="x-card">
+<div class="hd">{{ ic('x') }}<b>X 账号管理 <span class="mu mini">{{ x.accounts|length }} 个账号</span></b><span class="bd {{ 'ok' if x.logged_in else 'wa' }}">{{ "已登录" if x.logged_in else "未登录" }}</span><a class="x-open" href="https://x.com/home" target="_blank" rel="noopener noreferrer" hx-post="/settings/x/open" hx-target="#x-open-result" hx-swap="innerHTML">打开 X ↗</a><button type="button" class="x-login" hx-post="/settings/x/login" hx-target="#sec-src" hx-swap="innerHTML" hx-disabled-elt="this">{{ "重新登录" if x.logged_in else "登录 X" }}</button>{{ x_switch(x.plugin) }}</div>
+<div class="mu mini">通过 {{ x.browser or "已安装的浏览器" }} 采集 · 每个账号单独计入信源{% if x.login_open %} · 登录窗口已打开{% endif %}</div>
+{% if x.last_error %}<div class="mu" title="{{ x.last_error }}">{{ x.last_error }}</div>{% endif %}
+<div id="x-open-result" role="status"></div><div class="x-toolbar"><input type="search" data-x-search placeholder="搜索已关注的账号" aria-label="搜索X关注账号"><form class="x-add" hx-post="/settings/x/add" hx-target="#sec-src" hx-swap="innerHTML" autocomplete="off"><input name="handle" placeholder="输入 @账号" aria-label="添加X账号" required><button type="submit" class="primary" hx-disabled-elt="this">添加账号</button></form></div>
+<div class="x-accounts" role="region" aria-label="X 关注账号列表" tabindex="0">
+{% for a in x.accounts %}
+<div class="x-account{% if a.paused %} off{% endif %}" data-x-handle="{{ a.handle|lower }}"><div class="x-account-info"><span class="x-handle" title="@{{ a.handle }}">@{{ a.handle }}</span><span class="bd"{% if not a.paused %} data-source-badge="x:{{ a.handle|lower }}"{% endif %}>{{ "已暂停" if a.paused else "同步中…" }}</span></div><span class="x-actions">
+<button type="button" class="lk" aria-label="{{ '恢复' if a.paused else '暂停' }}采集 @{{ a.handle }}" hx-post="/settings/x/{{ a.eh }}/pause" hx-vals='{"paused":"{{ "false" if a.paused else "true" }}"}' hx-target="#sec-src" hx-swap="innerHTML" hx-disabled-elt="this">{{ "恢复" if a.paused else "暂停" }}</button>
+<button type="button" class="lk danger" aria-label="删除X账号 @{{ a.handle }}" hx-post="/settings/x/{{ a.eh }}/delete" hx-target="#sec-src" hx-swap="innerHTML" hx-confirm="取消关注 @{{ a.handle }}？" hx-disabled-elt="this">删除</button></span></div>
+{% endfor %}
+</div>
+<p class="mu mini x-empty" data-x-empty hidden>没有匹配的账号，试试其他关键词。</p>
+{% if not x.accounts %}<p class="mu">还没有关注账号，在上方添加即可开始采集。</p>{% endif %}
+</div>
+{% endif %}
+{% for s in sources %}{% if s.editing %}{{ sform(s) }}{% else %}
+<div class="cd{% if s.paused %} off{% endif %}">
+<div class="hd">{{ ic('rss') }}<b title="{{ s.name }}">{{ s.name }}</b><span class="bd {{ s.cls }}" data-source-badge="{{ s.id }}">{{ s.badge }}</span></div>
+<div class="mu" title="{{ s.line }}">{{ s.line }}</div>
+<div class="ft">
+{% if s.feed %}<button type="button" class="lk" hx-get="/settings/sources?edit={{ s.eid }}" hx-target="#sec-src" hx-swap="innerHTML">编辑</button>
+<button type="button" class="lk" hx-post="/settings/sources/{{ s.eid }}/pause" hx-vals='{"paused":"{{ "false" if s.paused else "true" }}"}' hx-target="#sec-src" hx-swap="innerHTML">{{ "恢复" if s.paused else "暂停" }}</button>{% endif %}
+{% if s.can_retry %}<button type="button" class="lk" hx-post="/settings/sources/{{ s.eid }}/retry" hx-target="#sec-src" hx-swap="innerHTML">立即重试</button>{% endif %}
+{% if s.feed %}<button type="button" class="lk danger" hx-post="/settings/sources/{{ s.eid }}/delete" hx-target="#sec-src" hx-swap="innerHTML" hx-confirm="删除信源“{{ s.name }}”？">删除</button>{% endif %}
+</div></div>{% endif %}{% endfor %}
+{% if can_add %}{% if new_form %}{{ sform(blank) }}{% else %}<button type="button" class="cd add" hx-get="/settings/sources?edit=new" hx-target="#sec-src" hx-swap="innerHTML">{{ ic('plus') }}添加信源</button>{% endif %}{% endif %}
+</div>

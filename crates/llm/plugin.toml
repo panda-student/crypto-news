@@ -1,0 +1,47 @@
+name = "llm"
+version = "1.1.0"
+description = "模型调用：多个模型服务（OpenAI 兼容与 Anthropic 原生）、用途分配、真流式、测试连接与用量统计"
+permissions = ["store"]
+tables = ["usage", "providers", "assignments"]
+
+[provides]
+llm = "1.2"
+
+[requires]
+store = "1"
+secrets = "1"
+
+[events]
+publish = ["llm.delta"]
+ephemeral = ["llm.delta"]
+subscribe = ["llm.cancel"]
+
+# 以下旧配置字段只用于首次迁移成"默认服务"，之后在界面的模型服务里管理。
+[config.fields.provider]
+type = "string"
+label = "接口类型（旧，仅迁移用）"
+default = "openai"
+
+[config.fields.base_url]
+type = "string"
+label = "接口地址（旧，仅迁移用）"
+default = "https://token.sensenova.cn/v1"
+help = "OpenAI 兼容写到 /v1 为止；Anthropic 写 https://api.anthropic.com"
+
+[config.fields.small_model]
+type = "string"
+label = "小模型（旧，仅迁移用）"
+default = "sensenova-6.8-flash-lite"
+
+[config.fields.large_model]
+type = "string"
+label = "大模型（旧，仅迁移用）"
+
+[config.fields.timeout_secs]
+type = "integer"
+label = "超时（秒）"
+default = 120
+
+[config.fields.api_key]
+type = "secret"
+label = "API 密钥（旧，仅迁移用）"

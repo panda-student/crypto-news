@@ -1,0 +1,17 @@
+[package]
+license = "Apache-2.0"
+name = "store"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "SQLite 存储后端：实现 contracts::store::StoreBackend"
+
+[dependencies]
+contracts = { path = "../contracts" }
+sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio"] }
+libsqlite3-sys = { version = "0.30", default-features = false }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+thiserror = { version = "2", default-features = false }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

@@ -1,0 +1,19 @@
+[package]
+license = "Apache-2.0"
+name = "hello-ext"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "扩展插件示例：单独可执行文件 + plugin.toml"
+
+[[bin]]
+name = "hello-ext"
+path = "src/main.rs"
+
+[dependencies]
+plugin-sdk = { path = "../../crates/plugin-sdk" }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros", "io-util"] }

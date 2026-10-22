@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}日报{% endblock %}
+{% block body %}
+<h1>日报</h1>
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<p><button class="primary" hx-get="/digests/preview" hx-target="#preview" hx-swap="innerHTML">预览今日日报</button></p>
+<div id="preview"></div>
+<h2>历史日报</h2>
+<table>
+<thead><tr><th>日期</th><th>时段</th><th>消息数</th><th>重要数</th><th>推送记录</th><th>生成时间</th></tr></thead>
+<tbody>
+{% for d in digests %}
+<tr><td>{{ d.date }}</td><td>{{ d.slot }}</td><td>{{ d.item_count }}</td><td>{{ d.important_count }}</td><td>{% if d.outbox_ids %}{{ d.outbox_ids | join("、") }}{% else %}-{% endif %}</td><td>{{ d.created_at }}</td></tr>
+{% else %}
+<tr><td colspan="6" class="muted">暂无日报</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endblock %}

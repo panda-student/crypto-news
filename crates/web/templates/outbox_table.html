@@ -1,0 +1,24 @@
+<div id="outbox" hx-get="/outbox/table?status={{ status }}" hx-trigger="every 30s" hx-swap="outerHTML">
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<table>
+<thead><tr><th>ID</th><th>类型</th><th>渠道</th><th>状态</th><th>次数</th><th>内容</th><th>错误</th><th>创建时间</th><th>操作</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td>{{ r.id }}{% if r.batch > 1 %}<span class="muted">-{{ r.batch }}</span>{% endif %}</td>
+<td>{{ r.kind_label }}</td>
+<td>{{ r.channel }}</td>
+<td>{{ r.status_label }}</td>
+<td>{{ r.attempts }}</td>
+<td><details><summary>{{ r.preview }}</summary><pre>{{ r.text }}</pre></details></td>
+<td>{% if r.last_error %}<span class="err">{{ r.last_error }}</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+<td>{{ r.created_at }}</td>
+<td>{% if r.can_retry %}<button hx-post="/api/v1/outbox/{{ r.id }}/retry?status={{ status }}" hx-target="#outbox" hx-swap="outerHTML">重试</button>{% endif %}</td>
+</tr>
+{% else %}
+<tr><td colspan="9" class="muted">暂无记录</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+</div>

@@ -1,0 +1,15 @@
+[package]
+license = "Apache-2.0"
+name = "auth"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "认证与权限的统一入口：首版恒为主人"
+
+[dependencies]
+contracts = { path = "../contracts" }
+plugin-sdk = { path = "../plugin-sdk" }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

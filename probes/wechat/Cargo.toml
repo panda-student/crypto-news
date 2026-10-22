@@ -1,0 +1,23 @@
+[package]
+license = "Apache-2.0"
+name = "probe-wechat"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "阶段 0 实测：微信 ClawBot 主动推送（基于自写的 ilink 协议库）"
+
+[dependencies]
+ilink = { path = "../../crates/ilink" }
+# 与 ilink 同一个 reqwest 主版本；TLS 只用 rustls
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+tokio = { version = "1", default-features = false, features = ["macros", "rt-multi-thread", "time", "signal"] }
+serde = { version = "1", default-features = false, features = ["derive"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+toml = { version = "0.8", default-features = false, features = ["parse"] }
+time = { version = "0.3", default-features = false, features = ["std", "formatting"] }
+qrcode = { version = "0.14", default-features = false }
+# 仅 --mock 使用：在本机起模拟 iLink 服务
+wiremock = "0.6"
+
+[dev-dependencies]
+tempfile = "3"

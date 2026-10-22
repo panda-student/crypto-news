@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "消息面分析 · 代码分层与功能模块",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "desktop",
+      "type": "frontend",
+      "label": "桌面外壳",
+      "sublabel": "desktop · 托盘 / 签名更新",
+      "pos": [
+        80.0,
+        100
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "assembly",
+      "type": "backend",
+      "label": "应用组装",
+      "sublabel": "app · 配置 / 插件登记 / MCP stdio",
+      "pos": [
+        410.0,
+        100
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "hub",
+      "type": "messagebus",
+      "label": "插件运行时",
+      "sublabel": "hub · 生命周期 / 服务路由 / 事件",
+      "pos": [
+        740.0,
+        100
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "界面与 MCP",
+      "sublabel": "web · 消息流 / 设置 / 审批计划",
+      "pos": [
+        80.0,
+        350
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "collection",
+      "type": "backend",
+      "label": "信源采集",
+      "sublabel": "collect / rss / x-browser / 公告",
+      "pos": [
+        410.0,
+        350
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "intelligence",
+      "type": "backend",
+      "label": "分析与决策",
+      "sublabel": "screen / llm / agent / rulebook",
+      "pos": [
+        740.0,
+        350
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "backend",
+      "label": "推送与渠道",
+      "sublabel": "dispatch / wechat-ilink / wecom",
+      "pos": [
+        1070.0,
+        350
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "clients",
+      "type": "external",
+      "label": "外部 AI 客户端",
+      "sublabel": "MCP stdio · 查询与待确认计划",
+      "pos": [
+        80.0,
+        650
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "contracts",
+      "type": "security",
+      "label": "契约与 SDK",
+      "sublabel": "contracts / plugin-sdk",
+      "pos": [
+        410.0,
+        650
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "database",
+      "label": "存储与密钥插件",
+      "sublabel": "store / secrets · 表隔离 / 加密",
+      "pos": [
+        740.0,
+        650
+      ],
+      "size": [
+        240,
+        88
+      ]
+    },
+    {
+      "id": "localdata",
+      "type": "database",
+      "label": "本机数据",
+      "sublabel": "SQLite · 系统钥匙串",
+      "pos": [
+        1070.0,
+        650
+      ],
+      "size": [
+        240,
+        88
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "desktop-to-assembly",
+      "from": "desktop",
+      "to": "assembly",
+      "label": "启动核心"
+    },
+    {
+      "id": "assembly-to-hub",
+      "from": "assembly",
+      "to": "hub",
+      "label": "登记与监督"
+    },
+    {
+      "id": "desktop-to-web",
+      "from": "desktop",
+      "to": "web",
+      "label": "本机界面",
+      "labelDy": 24
+    },
+    {
+      "id": "clients-to-web",
+      "from": "clients",
+      "to": "web",
+      "label": "MCP 工具"
+    },
+    {
+      "id": "assembly-to-collection",
+      "from": "assembly",
+      "to": "collection",
+      "label": "组装",
+      "labelDy": 24
+    },
+    {
+      "id": "collection-to-intelligence",
+      "from": "collection",
+      "to": "intelligence",
+      "label": "消息事件，经 Hub"
+    },
+    {
+      "id": "hub-to-intelligence",
+      "from": "hub",
+      "to": "intelligence",
+      "label": "服务与事件",
+      "labelDy": 24
+    },
+    {
+      "id": "intelligence-to-delivery",
+      "from": "intelligence",
+      "to": "delivery",
+      "label": "重点事件"
+    },
+    {
+      "id": "intelligence-to-storage",
+      "from": "intelligence",
+      "to": "storage",
+      "label": "数据服务",
+      "labelDy": 24
+    },
+    {
+      "id": "storage-to-localdata",
+      "from": "storage",
+      "to": "localdata",
+      "label": "持久化"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "应用层",
+      "items": [
+        "desktop 负责原生窗口、托盘、签名更新与安装退出",
+        "app 负责组装官方插件、读配置及 MCP stdio 桥接"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "功能插件层",
+      "items": [
+        "web 提供 HTTP 界面、统一 MCP 工具与操作确认",
+        "collect + 信源插件采集；screen/llm/agent 分析",
+        "dispatch 维护队列；微信/企业微信插件负责发送",
+        "scheduler、maintenance 提供调度与数据维护"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "框架与数据边界",
+      "items": [
+        "hub 管理生命周期、服务路由及事件总线",
+        "contracts/plugin-sdk 定义接口；插件不直接引用彼此",
+        "插件只经 store 服务访问自己的表，secrets 管理敏感值",
+        "图中跨模块消息关系由 Hub 路由，不表示直接代码依赖"
+      ]
+    }
+  ]
+}

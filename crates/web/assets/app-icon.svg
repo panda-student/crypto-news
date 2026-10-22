@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>消息面分析 — 消息与信号</title>
+  <defs>
+    <linearGradient id="tile" x1="96" y1="64" x2="896" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#244D45"/>
+      <stop offset="1" stop-color="#102C29"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="976" height="976" rx="228" fill="url(#tile)"/>
+  <rect x="25" y="25" width="974" height="974" rx="227" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="2"/>
+  <path d="M600 280H334c-55 0-86 31-86 86v242c0 55 31 86 86 86h22v88l112-88h222c55 0 86-31 86-86V462" fill="none" stroke="#F4F2E8" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M382 430h178M382 556h258" fill="none" stroke="#F4F2E8" stroke-width="58" stroke-linecap="round"/>
+  <circle cx="752" cy="284" r="89" fill="#A6E6BB"/>
+</svg>

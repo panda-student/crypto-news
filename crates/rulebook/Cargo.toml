@@ -1,0 +1,16 @@
+[package]
+license = "Apache-2.0"
+name = "rulebook"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "规则手册插件：保存和读取用户的分级规则"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }

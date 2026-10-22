@@ -1,0 +1,45 @@
+{% from "settings_icons.html" import ic %}
+{% macro pform(p) %}
+<form class="cd fm" hx-post="/settings/llm/save" hx-target="#sec-llm" hx-swap="innerHTML" autocomplete="off">
+<div class="hd"><b>{{ p.name or "新服务" }}</b></div>
+<input type="hidden" name="id" value="{{ p.id }}">
+<label>名称</label><input name="name" value="{{ p.name }}" required>
+<label>类型</label><select name="kind"><option value="openai"{% if p.kind != "anthropic" %} selected{% endif %}>OpenAI 兼容</option><option value="anthropic"{% if p.kind == "anthropic" %} selected{% endif %}>Anthropic</option></select>
+<label>地址</label><input name="base_url" value="{{ p.base_url }}" required>
+<label>API Key</label><input name="api_key" type="password" value="" autocomplete="new-password" placeholder="{% if p.has_key %}已设置，留空则不修改{% else %}粘贴 API Key{% endif %}">
+<label>可用模型（逗号分隔）</label><input name="models" value="{{ p.models }}">
+<div class="acts"><button type="submit" class="primary">保存</button><button type="button" hx-get="/settings/llm" hx-target="#sec-llm" hx-swap="innerHTML">取消</button></div>
+</form>
+{% endmacro %}
+{% if flash %}<div class="fl{% if not flash_ok %} bad{% endif %}">{{ flash }}</div>{% endif %}
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+{% if hint %}<div class="fl {{ hint.cls }} hint-bar" id="llm-hint"><span>{{ hint.text }}</span>{% if hint.act == "default" %}<button type="button" class="lk" hx-post="/settings/llm/{{ hint.target }}/default" hx-target="#sec-llm" hx-swap="innerHTML">{{ hint.label }}</button>{% else %}<button type="button" class="lk" hx-get="/settings/llm?edit={{ hint.target }}" hx-target="#sec-llm" hx-swap="innerHTML">{{ hint.label }}</button>{% endif %}</div>{% endif %}
+<div class="mu hint">每个服务的地址、密钥和模型放在一张卡里，带蓝框的是默认服务。</div>
+<div class="grid">
+{% for p in providers %}{% if p.editing %}{{ pform(p) }}{% else %}
+<div class="cd{% if p.is_default %} def{% endif %}">
+<div class="hd">{{ ic('cpu') }}<b>{{ p.name }}</b>{% if p.is_default %}<span class="bd ac">默认</span>{% endif %}<span class="bd {{ p.test_cls }}">{{ p.test_label }}</span></div>
+<div class="kv"><span>类型</span><span>{{ p.kind_label }}</span></div>
+<div class="kv"><span>地址</span><span title="{{ p.base_url }}">{{ p.base_url }}</span></div>
+<div class="kv"><span>密钥</span><span>{% if p.has_key %}已设置{% else %}<span class="err">未设置</span>{% endif %}</span></div>
+<div class="kv"><span>模型</span><span title="{{ p.models }}">{{ p.models }}</span></div>
+<div class="ft">
+<button type="button" class="lk" hx-get="/settings/llm?edit={{ p.eid }}" hx-target="#sec-llm" hx-swap="innerHTML">编辑</button>
+<button type="button" class="lk" hx-post="/settings/llm/{{ p.eid }}/test" hx-target="#t-{{ p.dom }}" hx-swap="innerHTML">测试连接</button>
+{% if not p.is_default %}<button type="button" class="lk" hx-post="/settings/llm/{{ p.eid }}/default" hx-target="#sec-llm" hx-swap="innerHTML">设为默认</button>
+<button type="button" class="lk danger" hx-post="/settings/llm/{{ p.eid }}/delete" hx-target="#sec-llm" hx-swap="innerHTML" hx-confirm="删除模型服务“{{ p.name }}”及其密钥？">删除</button>{% endif %}
+<span id="t-{{ p.dom }}" class="mini"></span>
+</div></div>{% endif %}{% endfor %}
+{% if new_form %}{{ pform(blank) }}{% else %}<button type="button" class="cd add" hx-get="/settings/llm?edit=new" hx-target="#sec-llm" hx-swap="innerHTML">{{ ic('plus') }}添加模型服务</button>{% endif %}
+</div>
+<div class="cd" style="margin-top:10px"><div class="hd"><b>用途分配</b><span class="mu">每种用途用哪个服务的哪个模型</span></div>
+{% for a in assigns %}<form class="row" hx-post="/settings/llm/assign" hx-trigger="change" hx-target="#sec-llm" hx-swap="innerHTML"{% if a.follow %} title="未单独分配，跟随默认服务"{% endif %}>
+<input type="hidden" name="purpose" value="{{ a.purpose }}"><span class="l">{{ a.label }}</span>
+<select name="provider_id" aria-label="{{ a.label }}的服务">{% for o in providers %}<option value="{{ o.id }}"{% if o.id == a.provider_id %} selected{% endif %}>{{ o.name }}</option>{% endfor %}</select>
+<select name="model" aria-label="{{ a.label }}的模型">{% for m in a.models %}<option{% if m == a.model %} selected{% endif %}>{{ m }}</option>{% endfor %}</select>
+</form>{% else %}<div class="mu">先添加模型服务。</div>{% endfor %}
+</div>
+<div class="cd" style="margin-top:10px"><div class="hd"><b>本月用量</b><span class="mu">{{ usage_total }}</span></div>
+{% for u in usage %}<div class="row"><span class="l">{{ u.label }}</span><div class="bar"><i style="width:{{ u.pct }}%"></i></div><span class="n" title="失败 {{ u.failures }} 次">{{ u.text }}</span></div>{% else %}<div class="mu">{{ usage_note }}</div>{% endfor %}
+</div>
+{% endif %}

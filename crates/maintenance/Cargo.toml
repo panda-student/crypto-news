@@ -1,0 +1,18 @@
+[package]
+license = "Apache-2.0"
+name = "maintenance"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "维护插件：每日备份数据库与清理归档消息"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["sync"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "macros", "sync"] }

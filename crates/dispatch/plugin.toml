@@ -1,0 +1,64 @@
+name = "dispatch"
+version = "0.1.0"
+description = "推送调度：快讯、日报、提醒与 outbox 发送队列"
+permissions = ["store"]
+tables = ["outbox", "digests", "digest_items", "focus_settings", "focus_receipts", "focus_pending"]
+
+[provides]
+dispatch = "1.0"
+
+[requires]
+store = "1"
+screening = {version="1",optional=true}
+channel = { version = "1", all = true }
+
+[events]
+publish = ["push.before"]
+subscribe = ["item.screened", "push.pending", "timer.tick", "source.failed", "source.recovered", "channel.status"]
+intercept = ["push.before"]
+
+[config.fields.utc_offset]
+type = "string"
+label = "本地时区偏移"
+default = "+08:00"
+help = "日报日期、时段和免打扰都按它计算，如 +08:00"
+
+[config.fields.push_urgent]
+type = "boolean"
+label = "紧急消息立即推送"
+default = true
+help = "关闭后紧急消息不再立即推送，只进日报"
+
+[config.fields.push_important]
+type = "boolean"
+label = "重要消息立即推送"
+default = true
+help = "关闭后重要消息不再立即推送，只进日报"
+
+[config.fields.digest_enabled]
+type = "boolean"
+label = "每日日报"
+default = true
+help = "关闭后不再生成和发送定时日报，预览仍可用"
+
+[config.fields.digest_time]
+type = "string"
+label = "日报时间"
+default = "08:00"
+
+[config.fields.quiet_hours]
+type = "string"
+label = "免打扰时段"
+default = ""
+help = "如 23:00-07:00，只延后快讯；留空表示不启用"
+
+[config.fields.renew_hint]
+type = "string"
+label = "纯文本日报末尾提示"
+default = "💬 回复任意内容，保持微信推送畅通"
+
+[config.fields.focus_mode]
+type = "boolean"
+label = "重点事件推送模式"
+default = true
+help = "开启后仅推送重点速览范围，使用首页推送设置；关闭为旧快讯/日报兼容模式"

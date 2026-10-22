@@ -1,0 +1,11 @@
+name = "hello-ext"
+version = "0.1.0"
+description = "扩展插件示例：打招呼并统计收到的条目数"
+entry = "hello-ext.exe"   # 其他系统改成 hello-ext
+permissions = []
+
+[provides]
+hello = "1.0"
+
+[events]
+subscribe = ["item.collected"]

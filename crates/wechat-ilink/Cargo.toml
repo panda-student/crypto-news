@@ -1,0 +1,21 @@
+[package]
+license = "Apache-2.0"
+name = "wechat-ilink"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "微信渠道：经 iLink 协议扫码绑定、纯文本推送、接收用户消息"
+
+[dependencies]
+ilink = { path = "../ilink" }
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["rt", "sync", "time"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
+wiremock = { version = "0.6", default-features = false }

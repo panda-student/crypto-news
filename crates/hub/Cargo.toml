@@ -1,0 +1,23 @@
+[package]
+license = "Apache-2.0"
+name = "hub"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "插件框架：监督插件、路由服务调用、投递事件、管理扩展插件进程"
+
+[dependencies]
+contracts = { path = "../contracts" }
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros", "sync", "time", "process", "io-util"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+toml = { version = "0.8", default-features = false, features = ["parse"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+thiserror = { version = "2", default-features = false }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

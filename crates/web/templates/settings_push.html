@@ -1,0 +1,49 @@
+{% from "settings_icons.html" import ic %}
+{% macro plugin_switch(p) %}{% if p and p.toggle %}<button type="button" class="sw{% if p.enabled %} on{% endif %}" role="switch" aria-checked="{{ 'true' if p.enabled else 'false' }}" aria-label="{{ p.label }}" data-plugin-switch="{{ p.name }}" hx-post="/settings/push/plugins/{{ p.name }}/enabled" hx-vals='{"enabled":"{{ "false" if p.enabled else "true" }}"}' hx-target="#sec-push" hx-swap="innerHTML" hx-disabled-elt="this"></button>{% endif %}{% endmacro %}
+{% if flash %}<div class="fl{% if not flash_ok %} bad{% endif %}">{{ flash }}</div>{% endif %}
+{% if error %}<p class="note">{{ error }}</p>{% endif %}
+{% if hint %}<div class="fl {{ hint.cls }} hint-bar" id="push-hint"><span>{{ hint.text }}</span></div>{% endif %}
+<div class="cd" style="margin-bottom:12px"><div class="hd"><b>发送队列</b>{% if dispatch %}<span class="bd {{ dispatch.cls }}" data-plugin-badge="dispatch">{{ dispatch.badge }}</span>{{ plugin_switch(dispatch) }}{% else %}<span class="mu mini">调度状态暂不可用</span>{% endif %}</div><div data-dispatch-queue="total" role="status" aria-live="polite">队列状态同步中…</div><p class="mu mini">关闭推送调度后停止自动发送和测试入队；开启后按推送规则处理待发队列。</p></div>
+<div class="grid">
+{% for c in channels %}
+<div class="cd">
+<div class="hd">{{ ic(c.icon) }}<b>{{ c.label }}</b><span class="bd {{ c.cls }}" data-channel-badge="{{ c.id }}">{{ c.badge }}</span>{{ plugin_switch(c.plugin) }}</div>
+{% if c.error %}<div class="err">{{ c.error }}</div>{% else %}
+<div class="kv"><span>{{ c.field }}</span><span>{{ c.value }}</span></div>
+<div class="kv"><span>接收</span><span>{{ c.recv }}</span></div>
+{% if c.kind == "wechat" %}<section class="channel-meter" data-channel-meter="{{ c.id }}" aria-label="微信推送额度">
+<div class="quota-heading"><span>剩余推送额度</span><span><strong data-quota-number>—</strong><span data-quota-limit></span></span></div>
+<progress data-quota-progress aria-label="微信剩余推送额度" hidden></progress>
+<div class="channel-times"><span>最近收到消息</span><span data-channel-received>同步中…</span><span>推送窗口至</span><span data-channel-expires>同步中…</span></div>
+<p class="mini" data-quota-note></p></section>{% endif %}
+{% if c.kind == "wecom" %}<section class="channel-meter" data-channel-meter="{{ c.id }}" data-quota-kind="wecom" aria-label="企业微信每分钟额度">
+<div class="quota-heading"><span>本分钟剩余额度</span><span><strong data-quota-number>—</strong><span data-quota-limit></span></span></div>
+<progress data-quota-progress aria-label="企业微信每分钟剩余额度" hidden></progress>
+<p class="mu mini" title="按本应用最近60秒成功发送记录估算，每条满60秒后恢复；不含其他客户端发送。重启插件后重新统计，实际发送以企业微信返回为准。">每分钟 20 条 · 成功发送后扣减，满一分钟恢复 ⓘ</p>
+<p class="mini" data-quota-note></p></section>{% endif %}
+<section class="channel-queue" data-queue-card="{{ c.id }}" aria-label="待发送队列"><div class="queue-heading"><span>待发送队列</span><span><strong data-queue-number>—</strong> 条</span></div><div class="queue-details" data-queue-detail>同步中…</div></section>
+{% if c.detail %}<div class="mu mini" data-channel-detail="{{ c.id }}">{{ c.detail }}</div>{% endif %}
+{% endif %}
+{% if c.hook_form %}<form class="fm" hx-post="/settings/push/webhook" hx-target="#sec-push" hx-swap="innerHTML" autocomplete="off">
+<label>Webhook 地址</label><input name="value" type="password" autocomplete="new-password" placeholder="粘贴群机器人 Webhook" required>
+<div class="acts"><button type="submit" class="primary">保存</button><button type="button" hx-get="/settings/push" hx-target="#sec-push" hx-swap="innerHTML">取消</button></div>
+</form>{% endif %}
+<div class="ft">
+{% if c.kind == "wecom" %}<button type="button" class="lk" hx-get="/settings/push?hook=1" hx-target="#sec-push" hx-swap="innerHTML">{{ "更换 Webhook" if c.configured else "设置 Webhook" }}</button>{% endif %}
+<button type="button" class="lk" hx-post="/api/v1/channels/{{ c.id }}/test" hx-target="#t-{{ c.dom }}" hx-swap="innerHTML" hx-disabled-elt="this"{% if c.plugin and not c.plugin.enabled %} disabled title="请先开启此渠道"{% endif %}>发送测试</button>
+{% if c.kind == "wechat" %}<button type="button" class="lk" hx-post="/api/v1/channels/{{ c.id }}/bind" hx-target="#bind-{{ c.id }}" hx-swap="outerHTML">{{ "绑定" if c.unbound else "重新绑定" }}</button>{% endif %}
+<span id="t-{{ c.dom }}" class="mini"></span>
+</div>
+{% if c.kind == "wechat" %}<div id="bind-{{ c.id }}"></div>{% endif %}
+</div>
+{% endfor %}
+{% if rules.focus_mode %}<div class="cd"><div class="hd"><b>重点事件推送</b></div><p class="mu">紧急事件立即推送，重要利空 / 利好按设置合并；一般和中性消息不主动通知，重复和过时消息不补推。</p><a href="/#push">打开首页重点速览的推送设置 →</a><p class="mu mini">首页搜索和临时筛选不改变推送范围。渠道连接和测试在本页管理。</p></div>{% else %}<form class="cd" hx-post="/settings/push/rules" hx-trigger="change" hx-target="#sec-push" hx-swap="innerHTML">
+<div class="hd">{{ ic('filter') }}<b>推送规则</b></div>
+{% if rules_error %}<div class="err mini">{{ rules_error }}</div>{% endif %}
+<label class="chk"><input type="checkbox" name="urgent" value="on"{% if rules.urgent %} checked{% endif %}> 紧急消息立即推送</label>
+<label class="chk"><input type="checkbox" name="important" value="on"{% if rules.important %} checked{% endif %}> 重要消息立即推送</label>
+<label class="chk"><input type="checkbox" name="digest" value="on"{% if rules.digest %} checked{% endif %}> 每日 {{ rules.digest_time }} 发日报</label>
+<label class="chk"><input type="checkbox" name="quiet" value="on"{% if rules.quiet %} checked{% endif %}> {{ rules.quiet_label }} 免打扰（紧急除外）</label>
+</form>{% endif %}
+</div>
+{% if not channels %}<p class="mu">没有可用的推送渠道插件。</p>{% endif %}

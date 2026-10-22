@@ -1,0 +1,32 @@
+name = "maintenance"
+version = "0.1.0"
+description = "每日备份数据库（保留最近若干份）并清理过期归档消息"
+permissions = ["store"]
+
+[requires]
+store = "1"
+screening = "1"
+item-query = "1"
+
+[events]
+subscribe = ["timer.tick"]
+
+[config.fields.backup_keep]
+type = "integer"
+label = "保留备份份数"
+default = 7
+
+[config.fields.archive_days]
+type = "integer"
+label = "归档消息保留天数"
+default = 90
+
+[config.fields.run_at]
+type = "string"
+label = "每日执行时间（本地，HH:MM）"
+default = "04:00"
+
+[config.fields.utc_offset]
+type = "string"
+label = "本地时区偏移"
+default = "+08:00"

@@ -1,0 +1,33 @@
+# Rust
+/target/
+/release/*
+!/release/.gitkeep
+**/*.rs.bk
+
+# 本地数据与密钥
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+.env
+.env.*
+/data/
+/secrets/
+
+# Claude Code 本地设置与工作区
+.claude/settings.local.json
+.claude/worktrees/
+
+# IDE / 系统
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# 实测程序的本地配置与状态
+probes/*/config.toml
+probes/*/state/
+
+# Tauri 生成目录
+crates/desktop/gen/

@@ -1,0 +1,11 @@
+<tr id="item-{{ r.id }}">
+<td>{{ r.id }}</td>
+<td>{% if r.link %}<a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}<div class="muted">{{ r.source_id }}</div></td>
+<td><select name="level" hx-post="/api/v1/items/{{ r.id }}/level" hx-trigger="change" hx-target="closest tr" hx-swap="outerHTML">
+{% if not r.level %}<option value="" selected disabled>未分级</option>{% endif %}
+{% for o in [["urgent","紧急"],["important","重要"],["normal","一般"],["archive","归档"]] %}<option value="{{ o[0] }}"{% if r.level == o[0] %} selected{% endif %}>{{ o[1] }}</option>{% endfor %}
+</select></td>
+<td>{% if r.reason %}{{ r.reason }}{% else %}<span class="muted">-</span>{% endif %}{% if r.impact %}<div class="muted">影响：{{ r.impact }}</div>{% endif %}</td>
+<td>{{ r.status_label }}{% if r.method_label %}<div class="muted">{{ r.method_label }}</div>{% endif %}</td>
+<td>{{ r.collected_at }}</td>
+</tr>

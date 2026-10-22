@@ -1,0 +1,20 @@
+[package]
+license = "Apache-2.0"
+name = "llm"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "模型调用：OpenAI 兼容与 Anthropic 原生适配器、用量统计"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+reqwest = { version = "0.12", default-features = false }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["sync", "time", "macros"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros", "net", "io-util", "time"] }
+wiremock = { version = "0.6", default-features = false }

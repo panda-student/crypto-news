@@ -1,0 +1,10 @@
+<div id="bind-{{ id }}"{% if not ok %} hx-get="/channels/{{ id }}/bind_status" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+{% if ok %}<p class="s-ok">已绑定</p>{% else %}
+<p>{{ state_label }}，请用微信扫码或打开链接完成绑定，完成后本区域会自动更新。</p>
+{% if qrcode_image %}<img class="qr" src="{{ qrcode_image }}" alt="绑定二维码">{% endif %}
+{% if qrcode_svg %}<div class="qr-box">{{ qrcode_svg|safe }}</div>{% endif %}
+{% if qrcode %}{% if qrcode_link %}<p class="qr-link"><a href="{{ qrcode }}" target="_blank" rel="noopener noreferrer">{{ qrcode }}</a></p>{% else %}<p class="qr-link"><code>{{ qrcode }}</code></p>{% endif %}
+<button type="button" class="qr-copy" data-link="{{ qrcode }}" onclick="var b=this;navigator.clipboard.writeText(b.dataset.link).then(function(){b.textContent='已复制'},function(){b.textContent='复制失败'})">复制链接</button>{% endif %}
+{% endif %}
+{% if detail %}<p class="muted">{{ detail }}</p>{% endif %}
+</div>

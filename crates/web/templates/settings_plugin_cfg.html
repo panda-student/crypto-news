@@ -1,0 +1,11 @@
+{% if text %}<div class="fl{% if not ok %} bad{% endif %} mini">{{ text }}</div>{% endif %}
+{% if fields is defined %}
+<form class="fm" hx-post="/settings/plugins/{{ name }}/config" hx-target="#cfg-{{ dom }}" hx-swap="innerHTML" autocomplete="off">
+{% for f in fields %}
+{% if f.type == "boolean" %}<label class="chk"><input type="checkbox" name="{{ f.key }}" value="on"{% if f.checked %} checked{% endif %}> {{ f.label }}</label>
+{% else %}<label>{{ f.label }}</label><input name="{{ f.key }}" value="{{ f.value }}"{% if f.type == "integer" %} inputmode="numeric"{% endif %}>
+{% endif %}{% if f.help %}<div class="mu mini">{{ f.help }}{% if f.type == "string_list" %}（逗号分隔）{% endif %}</div>{% endif %}
+{% endfor %}
+<div class="acts"><button type="submit" class="primary">保存并重启插件</button><button type="button" onclick="this.closest('[id^=cfg-]').innerHTML=''">取消</button></div>
+</form>
+{% endif %}

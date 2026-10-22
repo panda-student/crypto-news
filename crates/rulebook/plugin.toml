@@ -1,0 +1,11 @@
+name = "rulebook"
+version = "0.1.0"
+description = "规则手册：保存和读取用户的分级规则"
+permissions = ["store"]
+tables = ["rulebook"]
+
+[provides]
+rulebook = "1.0"
+
+[requires]
+store = "1"

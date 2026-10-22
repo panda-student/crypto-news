@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}统计{% endblock %}
+{% block bodyclass %}app{% endblock %}
+{% block topbar %}<a class="tab" href="/">动态</a><a class="tab on" href="/stats">统计</a><label class="srch"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="5" cy="5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 8l2.8 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><input id="sq" type="text" placeholder="搜索标题、币种" aria-label="搜索消息" autocomplete="off"></label>{% endblock %}
+{% block topright %}<span class="srcsum" id="srcsum"></span>{% endblock %}
+{% block body %}
+<div class="w" id="w"><div class="stv" id="stv"><div class="mu">加载中…</div></div></div>
+{% raw %}
+<script>
+(function () {
+var $ = function (id) { return document.getElementById(id); };
+var ESCM = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ESCM[c]; }); }
+var COL = { u: '#E24B4A', i: '#EF9F27', n: '#B4B2A9' };
+var D = null;
+function go(qs) { location.href = '/' + (qs ? '?' + qs : ''); }
+function cnt(a, f) { var o = {}; a.forEach(function (x) { var k = f(x); if (k) { o[k] = (o[k] || 0) + 1; } }); return o; }
+function bars(obj, attr, label) {
+  var keys = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; });
+  var mx = Math.max.apply(null, [1].concat(keys.map(function (k) { return obj[k]; })));
+  if (!keys.length) { return '<div class="mu">暂无数据</div>'; }
+  return keys.map(function (k) {
+    return '<div class="h" ' + attr + '="' + esc(k) + '" style="margin-bottom:4px">' + esc(label ? label(k) : k) + ' <span class="mu">' + obj[k] + '</span><div class="b6" style="width:' + Math.round(obj[k] / mx * 100) + '%"></div></div>';
+  }).join('');
+}
+function view() {
+  var all = D.items, lc = cnt(all, function (x) { return x.lv; });
+  var h = '<div class="mu" style="margin-bottom:6px">近 7 天概况。点任意数字或图形，跳到「动态」并按它筛选。</div>';
+  if (D.error) { h += '<div class="ban">消息暂时无法读取：' + esc(D.error) + '</div>'; }
+  h += '<div class="kp">' + [['消息', all.length, '', ''], ['紧急', lc.u || 0, 'var(--text-danger)', 'lv=u'], ['重要', lc.i || 0, 'var(--text-warning)', 'lv=ui'], ['未读', all.filter(function (x) { return x.unread; }).length, 'var(--text-accent)', 'unread=1']].map(function (r) {
+    return '<div data-q="' + r[3] + '"><span>' + r[0] + '</span><b style="color:' + (r[2] || 'var(--text-primary)') + '">' + r[1] + '</b></div>';
+  }).join('') + '</div>';
+  var bins = D.days.map(function () { return { u: 0, i: 0, n: 0 }; });
+  all.forEach(function (x) { var b = bins[x.d]; if (b) { b[x.lv === 'u' || x.lv === 'i' ? x.lv : 'n']++; } });
+  var mx = Math.max.apply(null, [1].concat(bins.map(function (b) { return b.u + b.i + b.n; })));
+  var s = '';
+  bins.forEach(function (b, k) {
+    var y = 96;
+    ['n', 'i', 'u'].forEach(function (l) { var g = b[l] / mx * 88; y -= g; if (g > 0) { s += '<rect x="' + (k * 57 + 9) + '" y="' + y + '" width="39" height="' + g + '" fill="' + COL[l] + '"/>'; } });
+    s += '<text x="' + (k * 57 + 28) + '" y="108" text-anchor="middle" style="font-size:9px;fill:var(--text-muted)">' + esc(D.days[k]) + '</text><rect class="h" data-q="day=' + encodeURIComponent(D.days[k]) + '" x="' + (k * 57) + '" y="0" width="57" height="96" fill="transparent"><title>' + esc(D.days[k]) + '：' + (b.u + b.i + b.n) + ' 条</title></rect>';
+  });
+  h += '<div class="pn"><div class="ttl"><span>消息量 · 按天</span><span><span style="color:#E24B4A">■</span>紧急 <span style="color:#EF9F27">■</span>重要 <span style="color:#B4B2A9">■</span>一般</span></div><svg viewBox="0 0 400 112" width="100%" role="img"><title>按天消息量</title>' + s + '</svg></div>';
+  var ac = {}; all.forEach(function (x) { (x.assets || []).forEach(function (a) { ac[a] = (ac[a] || 0) + 1; }); });
+  var names = {}; all.forEach(function (x) { names[x.s] = x.sn; });
+  var sc = cnt(all, function (x) { return x.s; }), xc = cnt(all, function (x) { return x.a; });
+  h += '<div class="tri"><div class="pn"><div class="ttl"><span>币种</span></div>' + bars(ac, 'data-asset') + '</div><div class="pn"><div class="ttl"><span>信源</span></div>' + bars(sc, 'data-src', function (k) { return names[k] || k; }) + '</div><div class="pn"><div class="ttl"><span>X 账号</span></div>' + bars(xc, 'data-acc') + '</div></div>';
+  $('stv').innerHTML = h;
+  var e = $('srcsum');
+  if (D.sources_unknown) { e.textContent = '信源 状态不可用'; }
+  else { var ok = D.sources.filter(function (z) { return z.state === 'ok'; }).length; e.textContent = '信源 ' + ok + '/' + D.sources.length + ' 正常'; }
+}
+$('stv').addEventListener('click', function (e) {
+  var t = e.target.closest('[data-q],[data-asset],[data-src],[data-acc]'); if (!t) { return; }
+  var d = t.dataset;
+  if (d.q) { go(d.q); }
+  else if (d.asset) { go('asset=' + encodeURIComponent(d.asset)); }
+  else if (d.src) { go('src=' + encodeURIComponent(d.src)); }
+  else if (d.acc) {
+    var it = D.items.filter(function (x) { return x.a === d.acc; })[0];
+    go('src=' + encodeURIComponent(it ? it.s : '') + '&acc=' + encodeURIComponent(d.acc));
+  }
+});
+$('sq').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { var v = this.value.trim(); go(v ? 'q=' + encodeURIComponent(v) : ''); }
+});
+fetch('/api/v1/dash', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (d) { D = d; view(); }).catch(function (e) { $('stv').innerHTML = '<div class="ban">统计数据暂时无法读取：' + esc(e.message) + '</div>'; });
+})();
+</script>
+{% endraw %}
+{% endblock %}

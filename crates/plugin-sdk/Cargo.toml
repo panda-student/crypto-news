@@ -1,0 +1,20 @@
+[package]
+license = "Apache-2.0"
+name = "plugin-sdk"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "编写插件的统一接口：官方插件与扩展插件共用"
+
+[dependencies]
+contracts = { path = "../contracts" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+toml = { version = "0.8", default-features = false, features = ["parse"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros", "sync", "time", "io-util", "io-std"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+thiserror = { version = "2", default-features = false }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

@@ -1,0 +1,46 @@
+[package]
+license = "Apache-2.0"
+name = "app"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "主程序：app serve 组装 hub 与全部官方插件"
+
+[lib]
+name = "app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+hub = { path = "../hub" }
+contracts = { path = "../contracts" }
+store = { path = "../store" }
+plugin-sdk = { path = "../plugin-sdk" }
+auth = { path = "../auth" }
+scheduler = { path = "../scheduler" }
+collect = { path = "../collect" }
+rss = { path = "../rss" }
+okx-ann = { path = "../okx-ann" }
+binance-ann = { path = "../binance-ann" }
+x-browser = { path = "../x-browser" }
+web = { path = "../web" }
+llm = { path = "../llm" }
+rulebook = { path = "../rulebook" }
+screen = { path = "../screen" }
+dispatch = { path = "../dispatch" }
+wecom-webhook = { path = "../wecom-webhook" }
+wechat-ilink = { path = "../wechat-ilink" }
+maintenance = { path = "../maintenance" }
+secrets = { path = "../secrets" }
+agent = { path = "../agent" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros", "signal"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "ansi", "std"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+toml = { version = "0.8", default-features = false, features = ["parse"] }
+thiserror = { version = "2", default-features = false }

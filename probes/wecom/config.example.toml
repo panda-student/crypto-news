@@ -1,0 +1,6 @@
+# 复制为 config.toml 后填写。config.toml 含密钥，不要提交。
+# 企业微信群机器人 webhook，形如 https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxx
+webhook_url = ""
+proxy = "http://127.0.0.1:7892"
+# 官方限制每个机器人每分钟 20 条，默认每 4 秒一条
+interval_secs = 4

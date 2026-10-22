@@ -1,0 +1,27 @@
+{% from "settings_icons.html" import ic %}
+{% if flash %}<div class="fl{% if not flash_ok %} bad{% endif %}">{{ flash }}</div>{% endif %}
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<div class="mu hint">官方插件随程序发布；扩展插件放在插件目录，重启后加载。</div>
+{% if need_restart %}<div class="ban">{{ ic('alert') }}<span>设置有改动，重启程序后生效。</span></div>{% endif %}
+<div class="grid">
+{% for p in plugins %}
+<div class="cd{% if not p.enabled %} off{% endif %}">
+<div class="hd">{{ ic(p.icon) }}<b title="{{ p.name }}">{{ p.label }}</b><span class="bd {{ p.cls }}" data-plugin-badge="{{ p.name }}">{{ p.badge }}</span>
+{% if p.toggle %}<button type="button" class="sw{% if p.enabled %} on{% endif %}" role="switch" aria-checked="{{ 'true' if p.enabled else 'false' }}" aria-label="{{ p.label }}" data-plugin-switch="{{ p.name }}" hx-post="/api/v1/plugins/{{ p.name }}/enabled" hx-vals='{"enabled":"{{ "false" if p.enabled else "true" }}"}' hx-target="#sec-plg" hx-swap="innerHTML"></button>{% endif %}</div>
+<div class="kv"><span>来源</span><span>{{ p.kind_label }}</span></div>
+<div class="kv"><span>版本</span><span>{{ p.version }}</span></div>
+<div class="kv"><span>权限</span><span title="{{ p.perms }}">{{ p.perms }}{% if not p.granted %} <span class="err">（未确认）</span>{% endif %}</span></div>
+{% if p.desc %}<div class="mu" title="{{ p.desc }}">{{ p.desc }}</div>{% endif %}
+{% if p.missing %}<div class="err mini">缺少依赖：{{ p.missing }}</div>{% endif %}
+{% if p.last_error %}<div class="err mini">{{ p.last_error }}</div>{% endif %}
+<div class="ft">
+{% if not p.granted %}<button type="button" class="lk" hx-post="/api/v1/plugins/{{ p.name }}/grant" hx-target="#sec-plg" hx-swap="innerHTML">确认权限</button>{% endif %}
+{% if p.can_config %}<button type="button" class="lk" hx-get="/settings/plugins/{{ p.name }}/config" hx-target="#cfg-{{ p.dom }}" hx-swap="innerHTML">配置</button>{% endif %}
+{% if p.can_restart %}<button type="button" class="lk" hx-post="/settings/plugins/{{ p.name }}/restart" hx-target="#cfg-{{ p.dom }}" hx-swap="innerHTML">重启</button>{% endif %}
+</div>
+<div id="cfg-{{ p.dom }}"></div>
+</div>
+{% else %}<div class="mu">没有插件。</div>{% endfor %}
+<div class="cd dis"><div class="hd">{{ ic('folder') }}<b>安装扩展插件</b></div><div class="mu">把插件放进插件目录后重启。</div></div>
+</div>
+{% endif %}

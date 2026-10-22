@@ -1,0 +1,4 @@
+/target
+/state/
+/config.toml
+/Cargo.lock

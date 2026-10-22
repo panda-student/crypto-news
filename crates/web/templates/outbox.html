@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}推送记录{% endblock %}
+{% block body %}
+<h1>推送记录</h1>
+<form method="get" action="/outbox" class="bar">
+<select name="status">
+<option value="">全部状态</option>
+{% for o in [["pending","等待发送"],["sent","已发送"],["manual","转人工"],["dropped","已丢弃"]] %}<option value="{{ o[0] }}"{% if status == o[0] %} selected{% endif %}>{{ o[1] }}</option>{% endfor %}
+</select>
+<button type="submit">筛选</button>
+</form>
+{% include "outbox_table.html" %}
+{% endblock %}

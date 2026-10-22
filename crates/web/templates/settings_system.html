@@ -1,0 +1,15 @@
+{% from "settings_icons.html" import ic %}
+{% if flash %}<div class="fl{% if not flash_ok %} bad{% endif %}">{{ flash }}</div>{% endif %}
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<div class="grid">
+
+<form class="cd fm" hx-post="/settings/system/app" hx-trigger="change" hx-target="#sec-sys" hx-swap="innerHTML">
+<div class="hd">{{ ic('desktop') }}<b>应用</b></div>
+<label class="chk"><input type="checkbox" name="autostart" value="on"{% if autostart %} checked{% endif %}{% if not desktop %} disabled{% endif %}> 开机自启</label>
+<label class="chk"><input type="checkbox" name="close_to_tray" value="on"{% if close_to_tray %} checked{% endif %}{% if not desktop %} disabled{% endif %}> 关闭窗口时缩到托盘</label>
+{% if not desktop %}<div class="mu mini">仅桌面版可用。</div>{% endif %}
+<div class="kv"><span>版本</span><span>{{ version }}</span></div>
+</form>
+<div class="cd"><div class="hd"><b>应用更新</b></div><label class="chk"><input type="checkbox" name="enabled" value="true"{% if auto_update %} checked{% endif %} hx-post="/settings/system/auto-update" hx-vals='js:{enabled:event.target.checked}' hx-target="#sec-sys" hx-swap="innerHTML"{% if not desktop %} disabled{% endif %}> 自动检查更新</label><p class="mu mini">启动后及每6小时检查新版本，安装前确认。</p><p data-update-status role="status">正在读取更新状态…</p><div class="ft"><button type="button" class="lk" hx-post="/settings/system/update" hx-vals='{"action":"check"}' hx-target="#sec-sys" hx-swap="innerHTML"{% if not desktop %} disabled{% endif %}>检查更新</button><button type="button" class="primary" data-update-install hx-post="/settings/system/update" hx-vals='{"action":"install"}' hx-confirm="确认下载、校验并安装更新？应用将退出并重新启动。" hx-target="#sec-sys" hx-swap="innerHTML" hidden>安装更新</button></div></div>
+</div>
+{% endif %}

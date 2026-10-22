@@ -1,0 +1,30 @@
+name = "wechat-ilink"
+version = "0.1.0"
+description = "微信渠道（iLink 协议）"
+permissions = ["store"]
+tables = ["wechat_session"]
+
+[provides]
+channel = "1.0"
+
+[requires]
+store = "1"
+secrets = "1"
+
+[events]
+publish = ["channel.status", "user.message"]
+
+[config.fields.qr_base_url]
+type = "string"
+label = "二维码主机"
+default = "https://ilinkai.weixin.qq.com"
+
+[config.fields.quota_per_reply]
+type = "integer"
+label = "用户每回复一条可推送的条数"
+default = 10
+
+[config.fields.session_hours]
+type = "integer"
+label = "会话有效小时数"
+default = 24

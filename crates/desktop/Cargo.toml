@@ -1,0 +1,23 @@
+[package]
+license = "Apache-2.0"
+name = "desktop"
+version = "0.2.1"
+edition = "2021"
+publish = false
+description = "桌面外壳：Tauri 2 窗口、托盘、开机自启，进程内启动核心服务"
+
+[build-dependencies]
+tauri-build = { version = "2", default-features = false , features = [] }
+
+[dependencies]
+app = { path = "../app" }
+hub = { path = "../hub" }
+contracts = { path = "../contracts" }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tauri = { version = "2", default-features = false, features = ["wry", "tray-icon", "image-ico", "image-png"] }
+tauri-plugin-single-instance = { version = "2", default-features = false }
+tauri-plugin-autostart = { version = "2", default-features = false }
+tauri-plugin-notification = { version = "2", default-features = false }
+tauri-plugin-updater = { version = "2", default-features = false, features = ["rustls-tls", "zip"] }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }

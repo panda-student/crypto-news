@@ -1,0 +1,18 @@
+name = "x-browser"
+version = "0.1.0"
+description = "用本机浏览器和你自己的 X 登录态，采集关注账号的时间线"
+permissions = ["network", "store"]
+tables = ["x_accounts", "x_meta"]
+
+[provides]
+source = "1.0"
+x-admin = "1.0"
+
+[requires]
+store = "1"
+hub-admin = "1"
+
+[config.fields.interval_secs]
+type = "integer"
+label = "抓取间隔（秒）"
+default = 600

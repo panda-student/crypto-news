@@ -1,0 +1,19 @@
+[package]
+license = "Apache-2.0"
+name = "okx-ann"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "OKX 公告信源"
+
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
+wiremock = { version = "0.6", default-features = false }

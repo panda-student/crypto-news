@@ -1,0 +1,23 @@
+name = "rss"
+version = "0.1.0"
+description = "SEC、CFTC、美联储与加密媒体 RSS 信源"
+permissions = ["network", "store"]
+tables = ["feeds", "feed_meta"]
+
+[provides]
+source = "1.0"
+feed-admin = "1.0"
+
+[requires]
+store = "1"
+
+[config.fields.contact_email]
+type = "string"
+label = "联系邮箱"
+required = false
+help = "SEC 要求 User-Agent 带联系邮箱，留空时 SEC 订阅不会抓取并提示。其他信源不受影响"
+
+[config.fields.interval_secs]
+type = "integer"
+label = "抓取间隔（秒）"
+default = 300

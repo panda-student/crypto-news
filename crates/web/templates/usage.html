@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}用量{% endblock %}
+{% block body %}
+<h1>模型用量（最近 30 天）</h1>
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+{% if not ready %}<p class="note">模型尚未就绪，请先到<a href="/secrets">密钥页</a>填写模型密钥。</p>{% endif %}
+<table>
+<thead><tr><th>日期</th><th>模型</th><th>用途</th><th>调用数</th><th>输入 token</th><th>输出 token</th><th>失败数</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr><td>{{ r.day }}</td><td>{{ r.model }}</td><td>{{ r.purpose }}</td><td>{{ r.calls }}</td><td>{{ r.input_tokens }}</td><td>{{ r.output_tokens }}</td><td>{{ r.failures }}</td></tr>
+{% else %}
+<tr><td colspan="7" class="muted">暂无用量</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,6 @@
+name = "auth"
+version = "0.1.0"
+description = "认证与权限：首版只有主人，所有动作都允许"
+
+[provides]
+auth = "1.0"

@@ -1,0 +1,21 @@
+[package]
+license = "Apache-2.0"
+name = "screen"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "初筛与简析：按规则手册给新消息分四级，紧急和重要级简析影响"
+
+[dependencies]
+sha2 = "0.10"
+url = "2"
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["sync", "time"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

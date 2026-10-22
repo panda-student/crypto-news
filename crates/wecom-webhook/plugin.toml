@@ -1,0 +1,27 @@
+name = "wecom-webhook"
+version = "0.1.0"
+description = "企业微信群机器人渠道：经 webhook 发 markdown 消息"
+
+[provides]
+channel = "1.0"
+
+[requires]
+secrets = "1"
+
+[events]
+publish = ["channel.status"]
+
+[config.fields.webhook_key]
+type = "secret"
+label = "群机器人 webhook key"
+help = "webhook 地址里 key= 后面的部分"
+
+[config.fields.backup]
+type = "boolean"
+label = "作为备用渠道"
+default = true
+
+[config.fields.base_url]
+type = "string"
+label = "接口地址"
+default = "https://qyapi.weixin.qq.com"

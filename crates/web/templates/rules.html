@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}规则{% endblock %}
+{% block body %}
+<h1>规则手册</h1>
+{% if error %}<p class="note">{{ error }}</p>{% else %}
+<p class="muted">分级与简析的判断标准写在这里，保存后立即生效。{% if updated_at %}最近更新：{{ updated_at }}{% else %}尚未保存过，当前显示内置默认规则。{% endif %}</p>
+<form hx-post="/api/v1/rules" hx-target="#rules-result" hx-swap="innerHTML">
+<textarea name="text" rows="24" class="wide">{{ text }}</textarea>
+<p><button class="primary" type="submit">保存</button> <span id="rules-result"></span></p>
+</form>
+{% endif %}
+{% endblock %}
