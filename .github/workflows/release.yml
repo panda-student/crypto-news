@@ -25,20 +25,45 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           cargo test --workspace --release
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Detect existing signed release
+        id: published
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content crates/desktop/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $result = gh release view "v$version" --repo $env:GITHUB_REPOSITORY --json assets,isDraft,isPrerelease 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            $release = ($result -join "`n") | ConvertFrom-Json
+            $expected = @("CryptoNews_$($version)_x64-setup.exe", "CryptoNews_$($version)_x64-setup.exe.sig", "CryptoNews_$($version)_x64-setup.exe.sha256", 'latest.json')
+            if ($release.isDraft -or $release.isPrerelease) { throw 'Existing version is not a stable published release' }
+            foreach ($asset in $expected) {
+              if ($asset -notin $release.assets.name) { throw "Existing release is incomplete: $asset" }
+            }
+            'exists=true' >> $env:GITHUB_OUTPUT
+            Write-Output "v$version is already published; preserving its signed assets. Source checks still ran."
+          } elseif (($result -join "`n") -match 'release not found|HTTP 404') {
+            'exists=false' >> $env:GITHUB_OUTPUT
+          } else {
+            throw 'Could not check published release; refusing to replace assets.'
+          }
       - name: Install Tauri CLI
+        if: steps.published.outputs.exists != 'true'
         run: cargo install tauri-cli --version '^2' --locked
       - name: Build signed installer
+        if: steps.published.outputs.exists != 'true'
         shell: pwsh
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         run: ./package.ps1
       - uses: actions/upload-artifact@v4
+        if: steps.published.outputs.exists != 'true'
         with:
           name: windows-release
           path: release/*
       - name: Publish tagged release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && steps.published.outputs.exists != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
