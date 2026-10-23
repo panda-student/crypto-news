@@ -290,6 +290,7 @@ pub async fn build_hub(cfg: &Config, data_dir: &Path) -> Result<Hub, AppError> {
         ("wechat-ilink", Arc::new(wechat_ilink::WechatIlinkPlugin)),
         ("agent", Arc::new(agent::AgentPlugin)),
         ("maintenance", Arc::new(maintenance::MaintenancePlugin)),
+        ("operations", Arc::new(operations::OperationsPlugin)),
         ("web", Arc::new(web::WebPlugin)),
     ];
     for (name, p) in officials {

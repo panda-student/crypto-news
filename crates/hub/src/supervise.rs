@@ -66,7 +66,8 @@ pub(crate) async fn run(inner: Arc<Inner>, mut rx: mpsc::UnboundedReceiver<Cmd>)
     }
 }
 
-/// 拓扑排序：提供者在前。返回顺序和处于循环依赖里的插件。
+/// 必需依赖决定启动顺序；可选依赖只优先让提供者启动，不能形成硬环。
+/// 返回顺序，以及必需依赖环与被该环阻塞的插件。
 fn topo(inner: &Inner) -> (Vec<String>, Vec<String>) {
     let st = inner.state.lock().unwrap();
     // 服务 → 提供它的插件
@@ -80,13 +81,18 @@ fn topo(inner: &Inner) -> (Vec<String>, Vec<String>) {
         }
     }
     let mut deps: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    let mut hard_deps: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
     for e in st.plugins.values() {
         let name = e.manifest.name.as_str();
         let d = deps.entry(name).or_default();
-        for svc in e.manifest.requires.keys() {
+        let hard = hard_deps.entry(name).or_default();
+        for (svc, req) in &e.manifest.requires {
             for p in providers.get(svc.as_str()).into_iter().flatten() {
                 if *p != name {
                     d.insert(p);
+                    if !req.optional() {
+                        hard.insert(p);
+                    }
                 }
             }
         }
@@ -94,13 +100,22 @@ fn topo(inner: &Inner) -> (Vec<String>, Vec<String>) {
     let mut order = Vec::new();
     let mut left = deps.clone();
     loop {
-        let ready: Vec<&str> = left
+        let mut ready: Vec<&str> = left
             .iter()
             .filter(|(_, d)| d.iter().all(|x| !left.contains_key(x)))
             .map(|(n, _)| *n)
             .collect();
         if ready.is_empty() {
-            break;
+            // 没有满足全部顺序偏好的节点时，只解除一个可选约束。
+            // 每轮重新检查完整依赖，尽量保留独立可选提供者先启动的旧顺序。
+            if let Some(name) = left
+                .keys()
+                .find(|name| hard_deps[*name].iter().all(|dep| !left.contains_key(dep)))
+            {
+                ready.push(name);
+            } else {
+                break;
+            }
         }
         for n in ready {
             left.remove(n);

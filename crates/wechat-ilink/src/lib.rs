@@ -40,7 +40,6 @@ const KEY_CREDENTIALS: &str = "wechat-ilink.credentials";
 const KEY_CONTEXT: &str = "wechat-ilink.context";
 const MAX_BYTES: usize = 2000;
 const QUOTA_REMINDER: &str = "⚠️ 推送额度即将用完，回复任意内容恢复";
-const WEB: &str = "web";
 const BIND_TIMEOUT: Duration = Duration::from_secs(300);
 const BIND_POLL_INTERVAL: Duration = Duration::from_secs(2);
 const BIND_MAX_ERRORS: u32 = 5;
@@ -235,11 +234,13 @@ fn now_ms(t: OffsetDateTime) -> i64 {
     (t.unix_timestamp_nanos() / 1_000_000) as i64
 }
 
-fn require_web(caller: &Caller) -> Result<(), ServiceError> {
-    if caller.plugin == WEB {
+fn require_management(caller: &Caller) -> Result<(), ServiceError> {
+    if caller.user_id == plugin_sdk::contracts::OWNER
+        && matches!(caller.plugin.as_str(), "web" | "operations")
+    {
         Ok(())
     } else {
-        Err(ServiceError::forbidden("只允许 web 调用"))
+        Err(ServiceError::forbidden("只允许界面或已确认的应用操作调用"))
     }
 }
 
@@ -257,11 +258,11 @@ impl Shared {
                 to_result(&self.send(req).await?)
             }
             "bind" => {
-                require_web(&caller)?;
+                require_management(&caller)?;
                 to_result(&self.bind().await?)
             }
             "bind_status" => {
-                require_web(&caller)?;
+                require_management(&caller)?;
                 to_result(&self.bind_info())
             }
             m => Err(ServiceError::method_not_found(m)),

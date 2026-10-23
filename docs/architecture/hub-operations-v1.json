@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "消息面分析 · Hub 驱动与独立应用操作",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "web",
+      "type": "backend",
+      "label": "web · 界面与接入",
+      "sublabel": "UI / HTTP / SSE / MCP 协议适配",
+      "tag": "workspace-state 管界面数据",
+      "pos": [
+        60,
+        230
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "llm · 模型调用",
+      "sublabel": "提供 llm · 服务商 / 协议 / 用量",
+      "pos": [
+        940,
+        120
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "collect",
+      "type": "backend",
+      "label": "collect · 采集编排",
+      "sublabel": "调用 source · 去重入库 / 来源状态",
+      "pos": [
+        60,
+        340
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "screen",
+      "type": "backend",
+      "label": "screen · 消息评估",
+      "sublabel": "初筛与重点简析 · 提供 screening",
+      "pos": [
+        940,
+        340
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "agent · 追问代理",
+      "sublabel": "问答 / LLM 规划 / 准备待确认操作",
+      "pos": [
+        60,
+        120
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "dispatch",
+      "type": "backend",
+      "label": "dispatch · 推送编排",
+      "sublabel": "选择 / 合并 / 队列 / 重试",
+      "pos": [
+        940,
+        450
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "wechat",
+      "type": "backend",
+      "label": "wechat-ilink · 微信适配",
+      "sublabel": "绑定 / 接收 / 发送 / 额度",
+      "pos": [
+        60,
+        450
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "hub-services",
+      "type": "messagebus",
+      "label": "内部模块：服务路由",
+      "sublabel": "ServiceCall → 定位服务提供方",
+      "pos": [
+        500,
+        120
+      ],
+      "size": [
+        240,
+        58
+      ]
+    },
+    {
+      "id": "hub-events",
+      "type": "messagebus",
+      "label": "内部模块：事件总线",
+      "sublabel": "发布 → 持久化 → 订阅投递",
+      "pos": [
+        500,
+        340
+      ],
+      "size": [
+        240,
+        58
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "store · 存储服务（非插件）",
+      "sublabel": "SQLite · app 注入 Hub / 按插件隔离表",
+      "pos": [
+        60,
+        570
+      ],
+      "size": [
+        400,
+        58
+      ]
+    },
+    {
+      "id": "secrets",
+      "type": "security",
+      "label": "secrets · 密钥插件",
+      "sublabel": "密钥加密存储 / 系统钥匙串",
+      "pos": [
+        820,
+        570
+      ],
+      "size": [
+        400,
+        58
+      ]
+    },
+    {
+      "id": "operations",
+      "type": "backend",
+      "label": "operations · 应用操作",
+      "sublabel": "目录 / 预览计划 / 用户确认 / 执行",
+      "pos": [
+        940,
+        230
+      ],
+      "size": [
+        280,
+        58
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "主要官方插件 · 每个绿色框对应一个独立插件 / crate",
+      "wraps": [
+        "web",
+        "llm",
+        "collect",
+        "screen",
+        "agent",
+        "dispatch",
+        "wechat",
+        "hub-services",
+        "hub-events",
+        "operations"
+      ],
+      "pad": 28
+    },
+    {
+      "kind": "region",
+      "label": "Hub · 单个运行时（含生命周期与权限管理）",
+      "wraps": [
+        "hub-services",
+        "hub-events"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "数据能力 · 经 Hub 服务接口访问",
+      "wraps": [
+        "store",
+        "secrets"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "agent-model",
+      "from": "agent",
+      "to": "hub-services",
+      "label": "llm.chat / 规划",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "routed-model",
+      "from": "hub-services",
+      "to": "llm",
+      "label": "llm 服务",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "web-commands",
+      "from": "web",
+      "to": "hub-services",
+      "label": "MCP / 用户确认",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "routed-operations",
+      "from": "hub-services",
+      "to": "operations",
+      "label": "app-operations",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "collected-publish",
+      "from": "collect",
+      "to": "hub-events",
+      "label": "item.collected",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "collected-deliver",
+      "from": "hub-events",
+      "to": "screen",
+      "label": "item.collected",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "screened-publish",
+      "from": "screen",
+      "to": "hub-events",
+      "label": "item.screened",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "screened-deliver",
+      "from": "hub-events",
+      "to": "dispatch",
+      "label": "item.screened",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "orange",
+      "title": "实线：服务调用　｜　紫色虚线：事件通知",
+      "items": [
+        "Agent → Hub → llm：新闻问答、内部 AI 操作规划都调用模型网关。",
+        "Agent / 外部 MCP → Hub → operations：共用工具目录与计划；只有界面可确认。",
+        "operations → Hub → 能力服务：执行配置修改；界面数据经 workspace-state，数据不跨表。"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "实际 18 个独立插件 · 此图仅列主要模块",
+      "items": [
+        "wecom-webhook、rss、x-browser、okx-ann、binance-ann 为各自协议适配器。",
+        "rulebook 管规则；auth 管认证；scheduler 管定时；maintenance 管数据维护。",
+        "Hub 是一个整体：内部服务路由与事件总线共同服务所有插件。"
+      ]
+    }
+  ]
+}

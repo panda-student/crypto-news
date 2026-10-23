@@ -1,7 +1,7 @@
-//! `secrets` 服务 1.0：加密保存的密钥，store crate 的 secrets 插件提供。
+//! `secrets` 服务 1.0：加密保存的密钥，secrets 插件提供。
 //!
 //! 键名格式 `<插件名>.<字段名>`，对应插件清单里 type = "secret" 的配置项。
-//! 权限：插件只能读写自己前缀下的键；web 能写、删任意键、列出全部，但读不到明文。
+//! 权限：插件只能读写自己前缀下的键；主人身份的 web / operations 能写、删任意键、列出全部，但读不到明文。
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -49,7 +49,7 @@ impl SecretsClient {
         self.0.call("delete", json!({ "key": key })).await?;
         Ok(())
     }
-    /// web 得到全部键；其他插件只得到自己前缀下的键。
+    /// 主人身份的 web / operations 得到全部键；其他插件只得到自己前缀下的键。
     pub async fn list(&self) -> Result<Vec<SecretEntry>, ServiceError> {
         let r: SecretList = call_typed(&*self.0, "list", &json!({})).await?;
         Ok(r.secrets)

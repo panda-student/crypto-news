@@ -445,7 +445,7 @@ fn find_channel(st: &AppState, id: &str) -> Option<ChannelClient> {
         .map(|(_, s)| ChannelClient(s))
 }
 
-fn bind_fragment(id: &str, b: &BindInfo) -> Response {
+pub(crate) fn bind_fragment(id: &str, b: &BindInfo) -> Response {
     let qrcode_image = b
         .qrcode_image
         .clone()

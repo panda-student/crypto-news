@@ -50,6 +50,13 @@ pub async fn call(
         return Err(ServiceError::forbidden("只有 web 能访问会话记录"));
     }
     match method {
+        "operate" => {
+            if caller.plugin != "web" {
+                return Err(ServiceError::forbidden("只有web能发起内部操作规划"));
+            }
+            let req: plugin_sdk::contracts::agent::OperateRequest = parse_params(params)?;
+            to_result(&crate::operations::ask(&agent.ctx, req.session_id, &req.request).await)
+        }
         "conversation_turns" => to_result(
             &agent
                 .conversation_turns(params["after"].as_i64().unwrap_or(0))

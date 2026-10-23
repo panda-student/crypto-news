@@ -1,0 +1,16 @@
+[package]
+name = "operations"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "Hub应用操作：目录、持久计划、确认与执行"
+[dependencies]
+plugin-sdk = { path = "../plugin-sdk" }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+tokio = { version = "1", default-features = false, features = ["sync"] }
+time = { version = "0.3", default-features = false, features = ["std"] }
+[dev-dependencies]
+store = { path = "../store" }
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }

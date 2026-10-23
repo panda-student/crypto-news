@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\IdeaProjects\\crypto-news\\docs\\architecture\\hub-operations-v1.json",
+  "output": "D:\\IdeaProjects\\crypto-news\\docs\\architecture\\architecture.html",
+  "specification": {
+    "sha256": "42f03c5d3acd3cc6223f9916d3452a0d50741e19408da694155a636852676f9b",
+    "bytes": 7000
+  },
+  "artifact": {
+    "sha256": "3af64dbb66dc265f64ed466fe7aa5e538171f84eff5763169b30d87eade39e5d",
+    "bytes": 816827
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

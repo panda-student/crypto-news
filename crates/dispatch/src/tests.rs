@@ -737,6 +737,33 @@ async fn test_send_queues_an_alert_for_web_only() {
 }
 
 #[tokio::test]
+async fn operations_can_queue_tests_and_manage_push_settings() {
+    let w = setup(json!({}), &[WECHAT]).await;
+    let operations = w
+        .hub
+        .context("operations", json!({}), test_http_client())
+        .service("dispatch");
+    assert!(operations.call("focus_settings", json!({})).await.is_ok());
+    let queued = operations
+        .call("test_send", json!({"channel":"wechat"}))
+        .await
+        .unwrap();
+    assert_eq!(queued["kind"], "alert");
+    assert_eq!(w.rows().await.len(), 1);
+    assert!(w.fake("wechat").sent().is_empty());
+    let mut guest = plugin_sdk::Caller::owner("operations");
+    guest.user_id = "guest".into();
+    assert_eq!(
+        w.d.handle(guest, "test_send", json!({"channel":"wechat"}))
+            .await
+            .unwrap_err()
+            .code,
+        ServiceError::FORBIDDEN
+    );
+    assert_eq!(w.rows().await.len(), 1);
+}
+
+#[tokio::test]
 async fn digest_survives_failure_before_bookkeeping() {
     let w = setup(json!({}), &[WECHAT]).await;
     screened(&w, 1, "normal", "一般消息").await;

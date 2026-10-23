@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "消息面分析 · Hub 驱动的插件架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "interface",
+      "type": "frontend",
+      "label": "Web 界面",
+      "sublabel": "web · 消息流 / 对话 / 设置",
+      "tag": "web · templates / assets",
+      "pos": [
+        480,
+        30
+      ],
+      "size": [
+        300,
+        60
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "type": "frontend",
+      "label": "桌面与应用组装",
+      "sublabel": "desktop / app · 启动 / 更新",
+      "tag": "desktop / app",
+      "pos": [
+        70,
+        30
+      ],
+      "size": [
+        250,
+        60
+      ]
+    },
+    {
+      "id": "ai-client",
+      "type": "external",
+      "label": "外部 AI 客户端",
+      "sublabel": "app mcp · stdio JSON-RPC",
+      "tag": "app mcp · stdio JSON-RPC",
+      "pos": [
+        890,
+        30
+      ],
+      "size": [
+        250,
+        60
+      ]
+    },
+    {
+      "id": "web-api",
+      "type": "backend",
+      "label": "界面与 MCP 服务",
+      "sublabel": "web · 路由 / 会话 / 变更确认",
+      "tag": "web",
+      "pos": [
+        480,
+        160
+      ],
+      "size": [
+        260,
+        54
+      ]
+    },
+    {
+      "id": "collection",
+      "type": "backend",
+      "label": "采集 · collect",
+      "sublabel": "rss / x-browser / 交易所公告",
+      "tag": "collect / rss / X / 公告",
+      "pos": [
+        480,
+        224
+      ],
+      "size": [
+        260,
+        54
+      ]
+    },
+    {
+      "id": "screening",
+      "type": "backend",
+      "label": "初筛与模型分析",
+      "sublabel": "screen / llm / rulebook",
+      "tag": "screen / llm / rulebook",
+      "pos": [
+        480,
+        288
+      ],
+      "size": [
+        260,
+        54
+      ]
+    },
+    {
+      "id": "conversation",
+      "type": "backend",
+      "label": "追问与共享会话",
+      "sublabel": "agent · 多消息 / 微信",
+      "tag": "agent",
+      "pos": [
+        480,
+        352
+      ],
+      "size": [
+        260,
+        54
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "backend",
+      "label": "推送与渠道",
+      "sublabel": "dispatch / 微信 / 企业微信",
+      "tag": "dispatch / channel",
+      "pos": [
+        480,
+        416
+      ],
+      "size": [
+        260,
+        54
+      ]
+    },
+    {
+      "id": "hub-runtime",
+      "type": "messagebus",
+      "label": "Hub · 服务路由",
+      "sublabel": "生命周期监督 / ServiceCall / 数据隔离",
+      "tag": "hub / plugin-sdk / contracts",
+      "pos": [
+        70,
+        160
+      ],
+      "size": [
+        210,
+        310
+      ]
+    },
+    {
+      "id": "persistence",
+      "type": "database",
+      "label": "存储服务 · store",
+      "sublabel": "SQLite · 消息 / 分析 / 会话 / 配置",
+      "tag": "store · 按插件隔离数据表",
+      "pos": [
+        70,
+        545
+      ],
+      "size": [
+        360,
+        60
+      ]
+    },
+    {
+      "id": "credentials",
+      "type": "security",
+      "label": "密钥插件 · secrets",
+      "sublabel": "密钥加密存储 / 系统钥匙串",
+      "tag": "secrets · 官方插件",
+      "pos": [
+        780,
+        545
+      ],
+      "size": [
+        360,
+        60
+      ]
+    },
+    {
+      "id": "event-router",
+      "type": "messagebus",
+      "label": "同一 Hub · 事件总线",
+      "sublabel": "发布 / 持久化 / 订阅投递",
+      "tag": "hub / events",
+      "pos": [
+        920,
+        160
+      ],
+      "size": [
+        220,
+        310
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "01  应用入口与呈现",
+      "wraps": [
+        "interface",
+        "bootstrap",
+        "ai-client"
+      ],
+      "pad": 28
+    },
+    {
+      "kind": "region",
+      "label": "02  同一 Hub 的两种通信机制 · 插件通过契约协作",
+      "wraps": [
+        "hub-runtime",
+        "event-router",
+        "web-api",
+        "collection",
+        "screening",
+        "conversation",
+        "delivery"
+      ],
+      "pad": 28
+    },
+    {
+      "kind": "region",
+      "label": "03  数据与本机基础服务",
+      "wraps": [
+        "persistence",
+        "credentials"
+      ],
+      "pad": 28
+    }
+  ],
+  "connections": [
+    {
+      "id": "ui-http",
+      "from": "interface",
+      "to": "web-api",
+      "label": "HTTP / SSE",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        610,
+        115
+      ]
+    },
+    {
+      "id": "ai-mcp",
+      "from": "ai-client",
+      "to": "web-api",
+      "label": "MCP 桥接",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "app-boot",
+      "from": "bootstrap",
+      "to": "hub-runtime",
+      "label": "登记 / 启停插件",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        195,
+        115
+      ]
+    },
+    {
+      "id": "web-services",
+      "from": "web-api",
+      "to": "hub-runtime",
+      "label": "ServiceCall",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "query-service",
+      "from": "hub-runtime",
+      "to": "collection",
+      "label": "item-query",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        435,
+        245
+      ]
+    },
+    {
+      "id": "analysis-service",
+      "from": "hub-runtime",
+      "to": "screening",
+      "label": "screening / llm",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        430,
+        320
+      ]
+    },
+    {
+      "id": "agent-service",
+      "from": "hub-runtime",
+      "to": "conversation",
+      "label": "agent",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        435,
+        378
+      ]
+    },
+    {
+      "id": "push-service",
+      "from": "hub-runtime",
+      "to": "delivery",
+      "label": "dispatch / channel",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        400,
+        460
+      ]
+    },
+    {
+      "id": "collected-publish",
+      "from": "collection",
+      "to": "event-router",
+      "label": "item.collected",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "collected-subscribe",
+      "from": "event-router",
+      "to": "screening",
+      "label": "item.collected",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "labelAt": [
+        785,
+        300
+      ]
+    },
+    {
+      "id": "screened-publish",
+      "from": "screening",
+      "to": "event-router",
+      "label": "item.screened",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelAt": [
+        785,
+        336
+      ]
+    },
+    {
+      "id": "screened-subscribe",
+      "from": "event-router",
+      "to": "delivery",
+      "label": "item.screened",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "store-service",
+      "from": "hub-runtime",
+      "to": "persistence",
+      "label": "store 服务",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        290,
+        535
+      ]
+    },
+    {
+      "id": "secret-service",
+      "from": "hub-runtime",
+      "to": "credentials",
+      "label": "secrets 服务",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "orange",
+      "title": "实线：服务调用　｜　虚线：事件通知　｜　两个橙色区域属于同一个 Hub",
+      "items": [
+        "配套插件：auth 负责认证，scheduler 负责定时任务，maintenance 负责数据维护；secrets 仍受 Hub 管理。"
+      ]
+    }
+  ]
+}

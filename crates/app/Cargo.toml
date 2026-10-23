@@ -27,6 +27,7 @@ okx-ann = { path = "../okx-ann" }
 binance-ann = { path = "../binance-ann" }
 x-browser = { path = "../x-browser" }
 web = { path = "../web" }
+operations = { path = "../operations" }
 llm = { path = "../llm" }
 rulebook = { path = "../rulebook" }
 screen = { path = "../screen" }

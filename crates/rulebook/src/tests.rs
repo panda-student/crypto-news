@@ -65,6 +65,29 @@ async fn non_web_set_forbidden() {
 }
 
 #[tokio::test]
+async fn operations_can_set_rules_but_non_owner_cannot() {
+    let ctx = setup().await;
+    let value = handle(
+        &ctx,
+        &caller("operations"),
+        "set",
+        json!({"text":"confirmed rule"}),
+    )
+    .await
+    .unwrap();
+    assert_eq!(value["text"], "confirmed rule");
+    let mut guest = caller("operations");
+    guest.user_id = "guest".into();
+    assert_eq!(
+        handle(&ctx, &guest, "set", json!({"text":"denied"}))
+            .await
+            .unwrap_err()
+            .code,
+        ServiceError::FORBIDDEN
+    );
+}
+
+#[tokio::test]
 async fn invalid_text_rejected() {
     let ctx = setup().await;
     let code = ServiceError::invalid_params("").code;

@@ -9,6 +9,7 @@ pub mod channel;
 pub mod dispatch;
 pub mod events;
 pub mod llm;
+pub mod operations;
 pub mod rulebook;
 pub mod screen;
 pub mod secrets;

@@ -364,6 +364,10 @@ agent 的补充：
 
 用户已批准原型并要求同步实际应用。最新原型仍为 docs/prototypes/feed-first-v17.html，配套 settings-review.css/js。实际设置页提供信源、关注币种、网络、系统、AI与MCP独立入口。关注币种展示已关注列表、移除、添加、未保存状态、撤销和保存；配色采用低饱和灰绿。X账号支持搜索、增加、暂停/恢复和确认删除，账号超高内部滚动；打开X复用采集资料目录，浏览窗口关闭后恢复后台采集。
 
-应用提供统一MCP工具目录，内部已配置AI与外部stdio客户端共用。查询直接返回，变更生成持久化计划，用户在应用确认后通过既有业务处理器执行；取消、过期、重复确认不能执行。密钥只在本机确认面板输入。自动更新使用Tauri updater与GitHub Release，自动检查，用户确认安装，签名校验后启动安装器。旧版覆盖安装先正常退出，超时只结束目标安装目录下的进程。
+应用提供统一MCP工具目录，内部已配置AI与外部stdio客户端共用。查询直接返回，变更生成持久化计划，用户在应用确认后由独立operations插件经Hub调用能力服务执行；取消、过期、重复确认不能执行。密钥只在本机确认面板输入。自动更新使用Tauri updater与GitHub Release，自动检查，用户确认安装，签名校验后启动安装器。旧版覆盖安装先正常退出，超时只结束目标安装目录下的进程。
 
 公开仓库为panda-student/crypto-news，源码与发行文件分别由Git与GitHub Releases托管。采用Apache License 2.0，第三方组件保留原许可；签名私钥与运行数据不纳入源码。代码分层图见docs/architecture/architecture.html。
+
+### Hub应用操作拆分
+
+operations独立拥有工具目录、持久计划与确认执行；web负责协议和展示，workspace-state保管界面数据。Agent通过Hub调用LLM进行操作规划，再通过同一app-operations服务准备计划。外部MCP也经Hub进入该服务。没有模型或外部客户端能够自行确认写入，秘密仍由本机确认面板输入。

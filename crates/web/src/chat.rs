@@ -74,7 +74,6 @@ pub(crate) struct ChatState {
     trash: Arc<Mutex<Vec<TrashEntry>>>,
     counter: Arc<AtomicU64>,
     sync: Arc<tokio::sync::Mutex<()>>,
-    pub(crate) operations: Arc<tokio::sync::Mutex<()>>,
 }
 
 impl ChatState {
@@ -799,31 +798,46 @@ pub(crate) async fn api_rename(
     if let Some(r) = check(&st, "web.manage").await {
         return r;
     }
-    let title = clip(body.v.title.trim(), 60);
-    if title.is_empty() {
-        return err_response(ServiceError::invalid_params("标题不能为空"));
-    }
-    match db(&st).rename_session(id, &title).await {
-        Ok(false) => (StatusCode::NOT_FOUND, "会话不存在").into_response(),
-        Ok(true) => Json(json!({ "session_id": id, "title": title })).into_response(),
+    match rename_session(&st, id, &body.v.title).await {
+        Ok(Some(value)) => Json(value).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, "会话不存在").into_response(),
         Err(e) => err_response(e),
     }
+}
+
+pub(crate) async fn rename_session(
+    st: &AppState,
+    id: i64,
+    title: &str,
+) -> Result<Option<Value>, ServiceError> {
+    let title = clip(title.trim(), 60);
+    if title.is_empty() {
+        return Err(ServiceError::invalid_params("标题不能为空"));
+    }
+    Ok(db(st)
+        .rename_session(id, &title)
+        .await?
+        .then(|| json!({"session_id":id,"title":title})))
 }
 
 pub(crate) async fn api_delete(State(st): Shared, Path(id): Path<i64>) -> Response {
     if let Some(r) = check(&st, "web.manage").await {
         return r;
     }
-    let d = db(&st);
-    let s = match d.session(id).await {
-        Ok(Some(s)) => s,
-        Ok(None) => return (StatusCode::NOT_FOUND, "会话不存在").into_response(),
-        Err(e) => return err_response(e),
+    match delete_session(&st, id).await {
+        Ok(Some(value)) => Json(value).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, "会话不存在").into_response(),
+        Err(e) => err_response(e),
+    }
+}
+
+/// Retains stream cancellation and the same GUI undo entry for assistant deletion.
+pub(crate) async fn delete_session(st: &AppState, id: i64) -> Result<Option<Value>, ServiceError> {
+    let d = db(st);
+    let Some(s) = d.session(id).await? else {
+        return Ok(None);
     };
-    let turns = match d.turns(id).await {
-        Ok(t) => t,
-        Err(e) => return err_response(e),
-    };
+    let turns = d.turns(id).await?;
     for sid in st.chat.live_for_session(id) {
         if let Some(x) = st.chat.get(&sid) {
             if let Ok(mut i) = x.inner.lock() {
@@ -835,9 +849,7 @@ pub(crate) async fn api_delete(State(st): Shared, Path(id): Path<i64>) -> Respon
             .publish(LLM_CANCEL, &LlmCancel { stream_id: sid })
             .await;
     }
-    if let Err(e) = d.delete_session(id).await {
-        return err_response(e);
-    }
+    d.delete_session(id).await?;
     let token = st.chat.new_id();
     if let Ok(mut t) = st.chat.trash.lock() {
         t.push((token.clone(), s, turns));
@@ -845,7 +857,7 @@ pub(crate) async fn api_delete(State(st): Shared, Path(id): Path<i64>) -> Respon
             t.remove(0);
         }
     }
-    Json(json!({ "session_id": id, "deleted": true, "undo": token })).into_response()
+    Ok(Some(json!({"session_id":id,"deleted":true,"undo":token})))
 }
 
 pub(crate) async fn api_undo(State(st): Shared, Path(token): Path<String>) -> Response {

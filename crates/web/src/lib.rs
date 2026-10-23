@@ -24,6 +24,7 @@ mod qr;
 mod settings;
 mod stats;
 mod status;
+mod workspace;
 
 use serde::Deserialize;
 
@@ -69,7 +70,7 @@ impl Plugin for WebPlugin {
             if let Ok(a) = listener.local_addr() {
                 tracing::info!("网页界面监听 http://{a}");
             }
-            let app = router(ctx.clone());
+            let app = try_router_with(ctx.clone(), Arc::new(opener::SystemOpener))?;
             let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
             let (done_tx, done_rx) = tokio::sync::oneshot::channel::<()>();
             ctx.spawn("http", async move {
@@ -105,6 +106,11 @@ pub fn router(ctx: Context) -> Router {
 }
 
 fn router_with(ctx: Context, opener: Arc<dyn opener::Opener>) -> Router {
+    try_router_with(ctx, opener)
+        .expect("workspace-state service must be declared in web/plugin.toml")
+}
+
+fn try_router_with(ctx: Context, opener: Arc<dyn opener::Opener>) -> Result<Router, PluginError> {
     let chat = chat::ChatState::default();
     chat.subscribe(&ctx);
     let st = Arc::new(AppState {
@@ -113,6 +119,7 @@ fn router_with(ctx: Context, opener: Arc<dyn opener::Opener>) -> Router {
         chat,
         status: status::Coordinator::default(),
     });
+    workspace::register(&st)?;
     let sync_state = st.clone();
     st.ctx.spawn("conversation-sync", async move {
         loop {
@@ -122,7 +129,7 @@ fn router_with(ctx: Context, opener: Arc<dyn opener::Opener>) -> Router {
         #[allow(unreachable_code)]
         Ok(())
     });
-    app_routes(st)
+    Ok(app_routes(st))
 }
 
 /// The GUI and confirmed assistant actions enter these same handlers and guards.

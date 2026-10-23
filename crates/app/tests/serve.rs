@@ -33,8 +33,18 @@ enabled = false
         "okx-ann",
         "binance-ann",
         "web",
+        "operations",
     ] {
         assert!(names.iter().any(|x| x == n), "缺少插件 {n}：{names:?}");
+    }
+    for name in ["web", "operations"] {
+        let plugin = v["plugins"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["name"] == name)
+            .unwrap();
+        assert_eq!(plugin["status"], "运行中", "{plugin}");
     }
     tokio::time::timeout(Duration::from_secs(20), hub.shutdown())
         .await

@@ -12,6 +12,7 @@
 
 mod ask;
 mod conversations;
+mod operations;
 mod render;
 #[cfg(test)]
 mod tests;

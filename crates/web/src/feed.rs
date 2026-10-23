@@ -513,21 +513,27 @@ pub(crate) async fn api_read_all(
         Err(e) => return err_response(e),
     };
     let tz = tz_offset(&headers);
-    let now = OffsetDateTime::now_utc();
-    let base = match load_base(&st, &f, tz, now).await {
-        Ok(b) => b,
-        Err(e) => return err_response(e),
-    };
-    // 标记当前筛选下可见的未读消息
-    let ids: Vec<i64> = apply_basic(&base.rows, &f)
+    match mark_filtered_read(&st, &f, tz).await {
+        Ok(value) => Json(value).into_response(),
+        Err(e) => err_response(e),
+    }
+}
+
+/// The assistant has no browser filters; its tool explicitly targets the default feed.
+pub(crate) async fn mark_default_read(st: &AppState) -> Result<Value, ServiceError> {
+    let f = Filters::from_params(&FeedParams::default())?;
+    mark_filtered_read(st, &f, 0).await
+}
+
+async fn mark_filtered_read(st: &AppState, f: &Filters, tz: i32) -> Result<Value, ServiceError> {
+    let base = load_base(st, f, tz, OffsetDateTime::now_utc()).await?;
+    let ids: Vec<i64> = apply_basic(&base.rows, f)
         .iter()
         .filter(|r| r.unread && (!f.star || r.starred))
         .map(|r| r.id)
         .collect();
-    if let Err(e) = db(&st).mark_read(&ids).await {
-        return err_response(e);
-    }
-    Json(json!({ "marked": ids.len(), "ids": ids })).into_response()
+    db(st).mark_read(&ids).await?;
+    Ok(json!({"marked":ids.len(),"ids":ids}))
 }
 
 pub(crate) async fn api_star(State(st): Shared, Path(id): Path<i64>) -> Response {

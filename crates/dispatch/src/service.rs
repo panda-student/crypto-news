@@ -10,9 +10,6 @@ use serde_json::{json, Value};
 use crate::outbox::{enum_str, NewOutbox, OutRow};
 use crate::{parse_ids, Dispatch};
 
-/// 只有这个插件能调用 retry 和 test_send。
-const WEB: &str = "web";
-
 #[derive(Debug, Deserialize)]
 struct DigestRow {
     id: i64,
@@ -24,12 +21,14 @@ struct DigestRow {
     created_at: Option<String>,
 }
 
-fn require_web(caller: &Caller, method: &str) -> Result<(), ServiceError> {
-    if caller.plugin == WEB {
+fn require_management(caller: &Caller, method: &str) -> Result<(), ServiceError> {
+    if caller.user_id == plugin_sdk::contracts::OWNER
+        && matches!(caller.plugin.as_str(), "web" | "operations")
+    {
         Ok(())
     } else {
         Err(ServiceError::forbidden(format!(
-            "只有 web 能调用 dispatch.{method}"
+            "只有界面或已确认的应用操作能调用 dispatch.{method}"
         )))
     }
 }
@@ -43,11 +42,11 @@ impl Dispatch {
     ) -> Result<Value, ServiceError> {
         match method {
             "focus_settings" => {
-                require_web(&caller, method)?;
+                require_management(&caller, method)?;
                 to_result(&self.focus_settings().await?)
             }
             "save_focus_settings" => {
-                require_web(&caller, method)?;
+                require_management(&caller, method)?;
                 let p = plugin_sdk::contracts::parse_params(params)?;
                 to_result(&self.save_focus_settings(p).await?)
             }
@@ -72,7 +71,7 @@ impl Dispatch {
             }
             "preview_digest" => to_result(&self.preview_digest().await?),
             "retry" => {
-                require_web(&caller, method)?;
+                require_management(&caller, method)?;
                 #[derive(Deserialize)]
                 struct P {
                     id: i64,
@@ -81,7 +80,7 @@ impl Dispatch {
                 to_result(&self.retry(p.id).await?)
             }
             "test_send" => {
-                require_web(&caller, method)?;
+                require_management(&caller, method)?;
                 #[derive(Deserialize)]
                 struct P {
                     channel: String,

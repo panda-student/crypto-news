@@ -106,12 +106,18 @@ pub(crate) async fn get(State(st): Shared) -> Response {
             }
         })
     );
-    let mcp = crate::mcp::pending(&st).await;
+    let mcp = bounded(async {
+        match crate::mcp::pending(&st).await {
+            Ok(data) => json!({"ok":true,"data":data}),
+            Err(_) => json!({"ok":false,"error":"应用操作服务暂不可用"}),
+        }
+    })
+    .await;
     let updates = HubAdminClient(st.ctx.service("hub-admin"))
         .app_get(plugin_sdk::contracts::hub_admin::app_keys::UPDATE_STATUS)
         .await
         .unwrap_or(Value::Null);
-    let value = json!({"updated_at":now_rfc3339(),"channels":channels,"sources":sources,"plugins":plugins,"model":model,"queue":queue,"mcp":{"ok":true,"data":mcp},"updates":{"ok":true,"data":updates}});
+    let value = json!({"updated_at":now_rfc3339(),"channels":channels,"sources":sources,"plugins":plugins,"model":model,"queue":queue,"mcp":mcp,"updates":{"ok":true,"data":updates}});
     *cache = Some((Instant::now(), value.clone()));
     reply(value, can_queue)
 }

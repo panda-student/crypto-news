@@ -282,7 +282,14 @@ agent 1.1 新增 `ask_stream`：参数是 `AskRequest` 加 `stream_id`，回答�
 
 - 外部MCP使用stdio JSON-RPC（2025-06-18）；`desktop.exe mcp`通过本机回环HTTP桥接统一工具目录。支持initialize、tools/list、tools/call、ping；通知不写stdout。主应用须已运行。
 - `/api/v1/mcp`是私有本机桥接，不宣称支持Streamable HTTP，拒绝带Origin的请求。所有工具调用要求web.manage，查询快照清除敏感字段。
-- 查询工具app_inspect、plan_status直接读取。变更工具只创建prefs内的mcp_plan_*计划，GUI通过POST `/api/v1/mcp/plans/{id}/confirm`或`cancel`处理。确认串行、先持久化running、终态不可重放，有效期1小时；密钥经单次确认体注入业务处理器，不写计划、不交给模型。
+- 查询工具app_inspect、plan_status直接读取。变更工具经Hub的app-operations服务创建operation_plans持久计划（旧prefs.mcp_plan_*经workspace-state幂等导入），GUI通过POST `/api/v1/mcp/plans/{id}/confirm`或`cancel`处理。确认串行、先持久化running、终态不可重放，有效期1小时；密钥经单次确认体传入operations，再通过Hub交给能力服务，不写计划、不交给模型。
 - `/api/v1/status`新增mcp和updates分区。各插件仍持有自己的状态，web只汇总实时快照。
 - GET/POST `/api/v1/prefs/watch_assets`共享已关注币种数据；网络独立路由为`/settings/network`，旧system/proxy写入路径保留兼容。
 - hub-admin应用设置增加auto_update、update_action；update_status为运行时数据，桌面外壳提供idle/checking/available/downloading/installing/current/error。自动检查默认开启，每6小时检查；安装须显式请求。重启不重放旧安装请求。
+
+### 应用操作服务拆分
+
+- `app-operations` 1.0（operations插件）：catalogue、inspect、prepare、status；仅web允许plans、confirm、cancel。调用方由Hub绑定，限定主人身份的web/agent，Agent不能执行或取消。
+- `agent` 1.2：新增operate(OperateRequest)，仅web发起；通过Hub调用llm与操作服务规划，返回Option<JSON>，普通消息交回原问答流程。
+- `workspace-state` 1.0（web插件）：仅operations可调用inspect、legacy_plans以及watch_assets/item_read/item_star/items_read_all/session_rename/session_delete；不读取其他插件表。
+- 必需服务依赖仍决定启动和循环错误；可选依赖是排序偏好，不因互相提供可选服务导致启动失败。服务调用时仍校验声明和可用性。

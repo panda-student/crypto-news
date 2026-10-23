@@ -275,10 +275,10 @@ pub(crate) async fn api_watch_assets(State(st): Shared, body: Body<WatchForm>) -
     if let Some(r) = check(&st, "web.manage").await {
         return r;
     }
-    let list = sanitize_assets(&body.v.assets);
-    if let Err(e) = db(&st).set_pref(PREF_WATCH, &list.join(",")).await {
-        return err_response(e);
-    }
+    let list = match save_watch_assets(&st, &body.v.assets).await {
+        Ok(list) => list,
+        Err(e) => return err_response(e),
+    };
     if body.json {
         return Json(json!({ "watch_assets": list })).into_response();
     }
@@ -286,4 +286,14 @@ pub(crate) async fn api_watch_assets(State(st): Shared, body: Body<WatchForm>) -
         "msg.html",
         minijinja::context! { ok => true, text => format!("已保存：{}", list.join(", ")) },
     )
+}
+
+/// Shared GUI and Hub workspace write: one sanitizer and one owned preference table.
+pub(crate) async fn save_watch_assets(
+    st: &AppState,
+    raw: &str,
+) -> Result<Vec<String>, ServiceError> {
+    let list = sanitize_assets(raw);
+    db(st).set_pref(PREF_WATCH, &list.join(",")).await?;
+    Ok(list)
 }

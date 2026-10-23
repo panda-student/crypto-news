@@ -114,6 +114,116 @@ async fn starts_in_dependency_order_and_reports_missing() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn mutual_optional_services_start_and_keep_caller_permissions() {
+    let hub = new_hub().await;
+    for (name, dependency) in [("a", "b"), ("b", "a")] {
+        let manifest = format!(
+            "name=\"{name}\"\nversion=\"1.0.0\"\n[provides]\n{name}=\"1\"\n[requires]\n{dependency}={{version=\"1\",optional=true}}\n"
+        );
+        let (p, _) = plugin(&manifest, move |ctx| async move {
+            ctx.provide_fn(ctx.name(), |caller, _, _| async move {
+                Ok(json!({"caller":caller.plugin}))
+            })?;
+            Ok(())
+        });
+        hub.add_official(p).unwrap();
+    }
+    hub.start().await.unwrap();
+    assert_eq!(status(&hub, "a"), "运行中");
+    assert_eq!(status(&hub, "b"), "运行中");
+    let result = crate::link::call_as(&hub.inner, "a", "b", None, "ping", json!({}))
+        .await
+        .unwrap();
+    assert_eq!(result["caller"], "a");
+    let denied = crate::link::call_as(&hub.inner, "a", "a", None, "ping", json!({}))
+        .await
+        .unwrap_err();
+    assert_eq!(denied.code, ServiceError::FORBIDDEN);
+    hub.shutdown().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn web_operations_agent_optional_cycle_starts_without_missing_providers() {
+    let hub = new_hub().await;
+    for (name, service, requires) in [
+        ("web", "workspace-state", "operations={version=\"1\",optional=true}\nagent={version=\"1\",optional=true}\nmissing={version=\"1\",optional=true}"),
+        ("operations", "operations", "workspace-state={version=\"1\",optional=true}"),
+        ("agent", "agent", "operations={version=\"1\",optional=true}"),
+    ] {
+        let manifest = format!(
+            "name=\"{name}\"\nversion=\"1.0.0\"\n[provides]\n{service}=\"1\"\n[requires]\n{requires}\n"
+        );
+        let (p, _) = plugin(&manifest, move |ctx| async move {
+            ctx.provide_fn(service, |caller, _, _| async move {
+                Ok(json!({"caller":caller.plugin}))
+            })?;
+            Ok(())
+        });
+        hub.add_official(p).unwrap();
+    }
+    hub.start().await.unwrap();
+    for name in ["web", "operations", "agent"] {
+        assert_eq!(status(&hub, name), "运行中");
+    }
+    let result = crate::link::call_as(
+        &hub.inner,
+        "operations",
+        "workspace-state",
+        None,
+        "read",
+        json!({}),
+    )
+    .await
+    .unwrap();
+    assert_eq!(result["caller"], "operations");
+    hub.shutdown().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn mandatory_dependency_cycle_is_still_rejected() {
+    let hub = new_hub().await;
+    for (name, dependency) in [("a", "b"), ("b", "a")] {
+        let manifest = format!(
+            "name=\"{name}\"\nversion=\"1.0.0\"\n[provides]\n{name}=\"1\"\n[requires]\n{dependency}=\"1\"\n"
+        );
+        let (p, starts) = plugin(&manifest, |_| async { Ok(()) });
+        hub.add_official(p).unwrap();
+        assert_eq!(starts.load(Ordering::SeqCst), 0);
+    }
+    hub.start().await.unwrap();
+    for p in hub.plugins() {
+        assert_eq!(p.status, "缺依赖");
+        assert_eq!(p.missing, ["循环依赖"]);
+    }
+    hub.shutdown().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn acyclic_optional_provider_still_starts_before_consumer() {
+    let hub = new_hub().await;
+    let order = Arc::new(Mutex::new(Vec::new()));
+    for (name, provides, requires) in [
+        (
+            "a-consumer",
+            "",
+            "[requires]\necho={version=\"1\",optional=true}\n",
+        ),
+        ("z-provider", "[provides]\necho=\"1\"\n", ""),
+    ] {
+        let seen = order.clone();
+        let manifest = format!("name=\"{name}\"\nversion=\"1.0.0\"\n{provides}{requires}");
+        let (p, _) = plugin(&manifest, move |_| {
+            seen.lock().unwrap().push(name);
+            async { Ok(()) }
+        });
+        hub.add_official(p).unwrap();
+    }
+    hub.start().await.unwrap();
+    assert_eq!(*order.lock().unwrap(), ["z-provider", "a-consumer"]);
+    hub.shutdown().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn failed_plugin_is_restarted_after_backoff() {
     let hub = new_hub().await;
     let (p, starts) = plugin(

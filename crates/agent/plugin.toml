@@ -1,18 +1,19 @@
 name = "agent"
 version = "0.1.0"
-description = "追问：用已收集的消息回答用户的问题，回答附原文链接；只读，不执行命令"
+description = "追问：用已收集的消息回答用户的问题，回答附原文链接；配置操作仅生成待确认计划，不自行执行"
 permissions = ["store"]
 tables = ["agent_replies", "conversation_turns"]
 
 [requires]
 store = "1"
 llm = "1.1"
+app-operations = { version = "1", optional = true }
 item-query = "1"
 screening = { version = "1", optional = true }
 channel = { version = "1", all = true }
 
 [provides]
-agent = "1.1"
+agent = "1.2"
 
 [events]
 subscribe = ["user.message"]

@@ -4,6 +4,9 @@ description = "本机网页界面：消息流、追问、统计，以及插件�
 permissions = ["store"]
 tables = ["item_states", "prefs", "chat_sessions", "chat_turns"]
 
+[provides]
+workspace-state = "1"
+
 [requires]
 hub-admin = "1"
 auth = "1"
@@ -15,7 +18,8 @@ item-query = { version = "1", optional = true }
 dispatch = { version = "1", optional = true }
 secrets = { version = "1", optional = true }
 llm = { version = "1", optional = true }
-agent = { version = "1", optional = true }
+agent = { version = "1.2", optional = true }
+app-operations = { version = "1", optional = true }
 feed-admin = { version = "1", optional = true }
 x-admin = { version = "1", optional = true }
 channel = { version = "1", optional = true, all = true }

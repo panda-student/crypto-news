@@ -52,8 +52,12 @@ async fn handle(
     match method {
         "get" => to_result(&get(ctx).await?),
         "set" => {
-            if caller.plugin != "web" {
-                return Err(ServiceError::forbidden("只有 web 可以修改规则手册"));
+            if caller.user_id != plugin_sdk::contracts::OWNER
+                || !matches!(caller.plugin.as_str(), "web" | "operations")
+            {
+                return Err(ServiceError::forbidden(
+                    "只有界面或已确认的应用操作能修改规则手册",
+                ));
             }
             #[derive(Deserialize)]
             struct P {

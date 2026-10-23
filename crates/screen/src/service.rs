@@ -226,8 +226,12 @@ pub async fn call(
             })
         }
         "review" => {
-            if caller.plugin != "web" {
-                return Err(ServiceError::forbidden("只有 web 能人工改级"));
+            if caller.user_id != plugin_sdk::contracts::OWNER
+                || !matches!(caller.plugin.as_str(), "web" | "operations")
+            {
+                return Err(ServiceError::forbidden(
+                    "只有界面或已确认的应用操作能人工改级",
+                ));
             }
             #[derive(Deserialize)]
             struct P {

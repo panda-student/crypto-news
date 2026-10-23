@@ -1,0 +1,21 @@
+name = "operations"
+version = "0.1.0"
+description = "应用操作：共享工具目录、修改预览、确认执行及计划状态；AI无权自行确认"
+permissions = ["store", "network"]
+tables = ["operation_plans"]
+[provides]
+app-operations = "1"
+[requires]
+store = "1"
+auth = "1"
+hub-admin = "1"
+workspace-state = { version = "1", optional = true }
+source-status = { version = "1", optional = true }
+feed-admin = { version = "1", optional = true }
+x-admin = { version = "1", optional = true }
+llm = { version = "1", optional = true }
+rulebook = { version = "1", optional = true }
+screening = { version = "1", optional = true }
+dispatch = { version = "1", optional = true }
+secrets = { version = "1", optional = true }
+channel = { version = "1", optional = true, all = true }

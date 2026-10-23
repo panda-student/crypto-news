@@ -187,6 +187,9 @@ async fn fixture(o: Opts) -> F {
         hub.register_fn("agent", "agent", move |m, p| {
             let a = a.clone();
             async move {
+                if m == "operate" {
+                    return Ok(Value::Null);
+                }
                 if m == "conversation_turns" {
                     return Ok(json!([]));
                 }
@@ -418,6 +421,9 @@ async fn chat_streams_deltas_then_done_and_saves_answer() {
     f._hub.register_fn("agent", "agent", move |m, p| {
         let hub = hub.clone();
         async move {
+            if m == "operate" {
+                return Ok(Value::Null);
+            }
             if m == "conversation_turns" {
                 return Ok(json!([]));
             }
@@ -889,6 +895,7 @@ async fn shared_outbox_retries_without_duplicate_import() {
         let count = count.clone();
         async move {
             match m.as_str() {
+                "operate" => Ok(Value::Null),
                 "conversation_turns" => Ok(json!(log
                     .lock()
                     .unwrap()

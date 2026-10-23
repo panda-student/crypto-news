@@ -1,0 +1,21 @@
+{
+  "artifact": {
+    "path": "D:\\IdeaProjects\\crypto-news\\docs\\architecture\\architecture.html",
+    "sha256": "3af64dbb66dc265f64ed466fe7aa5e538171f84eff5763169b30d87eade39e5d",
+    "bytes": 816827
+  },
+  "browser_evidence": "passed",
+  "visual_review": "passed",
+  "correction_rounds": 0,
+  "reviewer": "image-capable assistant",
+  "reviewed": [
+    "1440x900.light",
+    "2048x1320.dark"
+  ],
+  "observations": [
+    "One central Hub boundary contains service router and event bus.",
+    "Agent to Hub to LLM is visible as solid service-call arrows.",
+    "Operations is a distinct plugin box. Event paths are purple dashed arrows.",
+    "Both inspected compositions have clear module labels and no overlaps."
+  ]
+}

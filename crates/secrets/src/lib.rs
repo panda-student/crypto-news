@@ -3,7 +3,7 @@
 //! - 每个值用 AES-256-GCM 加密，nonce 每次随机 12 字节，键名作附加数据（密文不能挪给别的键用）。
 //! - nonce 和密文以 hex 文本存在 `secrets` 表（store 的查询结果不支持 BLOB）。
 //! - 主密钥来自 [`MasterKeySource`]，首版是系统钥匙串。
-//! - 权限：插件只能读写自己前缀（`<插件名>.`）下的键；web 能写、删任意键、列出全部，但读不到明文。
+//! - 权限：插件只能读写自己前缀（`<插件名>.`）下的键；web 与 operations 可管理任意键和列出元数据，但读不到其他插件的密钥明文。
 //! - 值不进日志、错误信息。
 
 mod key;
@@ -27,7 +27,10 @@ const SCHEMA: &str = "CREATE TABLE secrets (\
     key TEXT PRIMARY KEY, nonce TEXT NOT NULL, ciphertext TEXT NOT NULL, updated_at TEXT NOT NULL)";
 
 /// 能管理全部键的插件。
-const ADMIN_PLUGIN: &str = "web";
+fn is_admin(caller: &Caller) -> bool {
+    caller.user_id == plugin_sdk::contracts::OWNER
+        && matches!(caller.plugin.as_str(), "web" | "operations")
+}
 /// 值的上限。
 const MAX_VALUE_BYTES: usize = 8 * 1024;
 const NONCE_LEN: usize = 12;
@@ -147,7 +150,7 @@ impl State {
             "set" => {
                 let p: SetParam = parse_params(params)?;
                 check_key(&p.key)?;
-                if !(owns(caller, &p.key) || caller.plugin == ADMIN_PLUGIN) {
+                if !(owns(caller, &p.key) || is_admin(caller)) {
                     return Err(ServiceError::forbidden("只能写自己的密钥"));
                 }
                 if p.value.is_empty() {
@@ -162,7 +165,7 @@ impl State {
             "delete" => {
                 let p: KeyParam = parse_params(params)?;
                 check_key(&p.key)?;
-                if !(owns(caller, &p.key) || caller.plugin == ADMIN_PLUGIN) {
+                if !(owns(caller, &p.key) || is_admin(caller)) {
                     return Err(ServiceError::forbidden("只能删除自己的密钥"));
                 }
                 self.ctx
@@ -186,7 +189,7 @@ impl State {
                     .map_err(db_err)?;
                 let secrets = rows
                     .into_iter()
-                    .filter(|r| caller.plugin == ADMIN_PLUGIN || owns(caller, &r.key))
+                    .filter(|r| is_admin(caller) || owns(caller, &r.key))
                     .map(|r| SecretEntry {
                         key: r.key,
                         configured: true,

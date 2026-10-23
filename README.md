@@ -4,7 +4,7 @@
 
 ## 当前版本
 
-桌面版本 **0.2.1**，正式界面对齐 [最新原型 v17](docs/prototypes/feed-first-v17.html)。顶部三类概览（紧急事件、重要利空、重要利好），下方连续消息流；消息详情与追问合为一个会话，支持多条参考消息、移出及撤销、流式回答、自动刷新倒计时。
+桌面版本 **0.2.2**，正式界面对齐 [最新原型 v17](docs/prototypes/feed-first-v17.html)。顶部三类概览（紧急事件、重要利空、重要利好），下方连续消息流；消息详情与追问合为一个会话，支持多条参考消息、移出及撤销、流式回答、自动刷新倒计时。
 
 重点速览显示原始发布后 6 小时内的紧急事件、24 小时内的重要利空/利好；消息流可继续向下读取更早历史。页面每 30 秒同步已采集数据，信源按各自采集周期运行。
 
@@ -15,6 +15,8 @@
 - [安装与运行](docs/install.md)
 - [信源调研](docs/research.md)
 - [代码分层与交互架构图](docs/architecture/architecture.html)
+- [0.2.2 发行验证](docs/verification/release-0.2.2.md)
+- [应用操作插件与架构验证](docs/architecture/operations-verification.md)
 - [0.2.1 验证记录与验收边界](docs/verification/release-0.2.1.md)
 
 ## 开发验证

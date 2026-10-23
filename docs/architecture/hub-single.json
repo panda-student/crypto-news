@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "消息面分析 · 实际插件边界与 Hub 核心",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "web",
+      "type": "backend",
+      "label": "web · 界面与接入",
+      "sublabel": "UI / HTTP / MCP / 操作计划",
+      "tag": "当前职责偏宽，详见边界评审",
+      "pos": [
+        60,
+        120
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "llm · 模型调用",
+      "sublabel": "提供 llm · 服务商 / 协议 / 用量",
+      "pos": [
+        940,
+        120
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "collect",
+      "type": "backend",
+      "label": "collect · 采集编排",
+      "sublabel": "调用 source · 去重入库 / 来源状态",
+      "pos": [
+        60,
+        230
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "screen",
+      "type": "backend",
+      "label": "screen · 消息评估",
+      "sublabel": "初筛与重点简析 · 提供 screening",
+      "pos": [
+        940,
+        230
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "agent · 追问代理",
+      "sublabel": "检索 / 回答 / 共享会话 · 提供 agent",
+      "pos": [
+        60,
+        340
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "dispatch",
+      "type": "backend",
+      "label": "dispatch · 推送编排",
+      "sublabel": "选择 / 合并 / 队列 / 重试",
+      "pos": [
+        940,
+        340
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "wechat",
+      "type": "backend",
+      "label": "wechat-ilink · 微信适配",
+      "sublabel": "绑定 / 接收 / 发送 / 额度",
+      "pos": [
+        60,
+        450
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "wecom",
+      "type": "backend",
+      "label": "wecom-webhook · 企业微信适配",
+      "sublabel": "Webhook 发送 / 额度 / 状态",
+      "pos": [
+        940,
+        450
+      ],
+      "size": [
+        280,
+        58
+      ]
+    },
+    {
+      "id": "hub-services",
+      "type": "messagebus",
+      "label": "内部模块：服务路由",
+      "sublabel": "ServiceCall → 定位服务提供方",
+      "pos": [
+        500,
+        120
+      ],
+      "size": [
+        240,
+        58
+      ]
+    },
+    {
+      "id": "hub-events",
+      "type": "messagebus",
+      "label": "内部模块：事件总线",
+      "sublabel": "发布 → 持久化 → 订阅投递",
+      "pos": [
+        500,
+        230
+      ],
+      "size": [
+        240,
+        58
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "store · 存储服务（非插件）",
+      "sublabel": "SQLite · app 注入 Hub / 按插件隔离表",
+      "pos": [
+        60,
+        570
+      ],
+      "size": [
+        400,
+        58
+      ]
+    },
+    {
+      "id": "secrets",
+      "type": "security",
+      "label": "secrets · 密钥插件",
+      "sublabel": "密钥加密存储 / 系统钥匙串",
+      "pos": [
+        820,
+        570
+      ],
+      "size": [
+        400,
+        58
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "主要官方插件 · 每个绿色框对应一个独立插件 / crate",
+      "wraps": [
+        "web",
+        "llm",
+        "collect",
+        "screen",
+        "agent",
+        "dispatch",
+        "wechat",
+        "wecom",
+        "hub-services",
+        "hub-events"
+      ],
+      "pad": 28
+    },
+    {
+      "kind": "region",
+      "label": "Hub · 单个运行时（含生命周期与权限管理）",
+      "wraps": [
+        "hub-services",
+        "hub-events"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "数据能力 · 经 Hub 服务接口访问",
+      "wraps": [
+        "store",
+        "secrets"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "web-call",
+      "from": "web",
+      "to": "hub-services",
+      "label": "ServiceCall",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "llm-call",
+      "from": "hub-services",
+      "to": "llm",
+      "label": "llm",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "collected-publish",
+      "from": "collect",
+      "to": "hub-events",
+      "label": "item.collected",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "collected-deliver",
+      "from": "hub-events",
+      "to": "screen",
+      "label": "item.collected",
+      "variant": "dashed",
+      "toSide": "top",
+      "labelAt": [
+        850,
+        185
+      ],
+      "fromSide": "top",
+      "via": [
+        [
+          620,
+          190
+        ],
+        [
+          1080,
+          190
+        ]
+      ]
+    },
+    {
+      "id": "screened-publish",
+      "from": "screen",
+      "to": "hub-events",
+      "label": "item.screened",
+      "variant": "dashed",
+      "toSide": "bottom",
+      "labelAt": [
+        1080,
+        323
+      ],
+      "fromSide": "bottom",
+      "via": [
+        [
+          1080,
+          330
+        ],
+        [
+          620,
+          330
+        ]
+      ]
+    },
+    {
+      "id": "screened-deliver",
+      "from": "hub-events",
+      "to": "dispatch",
+      "label": "item.screened",
+      "variant": "dashed",
+      "toSide": "bottom",
+      "labelAt": [
+        850,
+        420
+      ],
+      "fromSide": "bottom",
+      "via": [
+        [
+          620,
+          420
+        ],
+        [
+          1080,
+          420
+        ]
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "orange",
+      "title": "实线：服务调用　｜　虚线：事件通知　｜　Hub 内部两模块不是插件",
+      "items": [
+        "仅画代表性通信路径；所有插件通过 Hub 协作，未连线不代表绕过 Hub。"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "其他独立插件（完整 17 项清单见同目录说明）",
+      "items": [
+        "rss、x-browser、okx-ann、binance-ann 各自提供信源适配。",
+        "rulebook 管规则；auth 管认证；scheduler 管定时；maintenance 管维护。"
+      ]
+    }
+  ]
+}

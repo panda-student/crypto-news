@@ -143,6 +143,44 @@ async fn web_can_write_but_not_read() {
 }
 
 #[tokio::test]
+async fn operations_can_manage_secrets_without_reading_plaintext() {
+    let (_ctx, s) = setup().await;
+    call(
+        &s,
+        "operations",
+        "set",
+        json!({"key":"llm.k","value":"local-only"}),
+    )
+    .await
+    .unwrap();
+    let list = call(&s, "operations", "list", json!({})).await.unwrap();
+    assert_eq!(list["secrets"][0]["key"], "llm.k");
+    assert!(!list.to_string().contains("local-only"));
+    assert_eq!(
+        code(call(&s, "operations", "get", json!({"key":"llm.k"})).await),
+        ServiceError::FORBIDDEN
+    );
+    let mut non_owner = caller("operations");
+    non_owner.user_id = "guest".into();
+    assert_eq!(
+        s.handle(&non_owner, "set", json!({"key":"llm.k","value":"changed"}))
+            .await
+            .unwrap_err()
+            .code,
+        ServiceError::FORBIDDEN
+    );
+    call(&s, "operations", "delete", json!({"key":"llm.k"}))
+        .await
+        .unwrap();
+    assert!(
+        call(&s, "operations", "list", json!({})).await.unwrap()["secrets"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[tokio::test]
 async fn list_filters_by_caller_and_hides_values() {
     let (_ctx, s) = setup().await;
     call(&s, "web", "set", json!({"key":"llm.k","value":"v1"}))

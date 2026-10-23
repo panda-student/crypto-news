@@ -373,6 +373,22 @@ async fn review_rejects_non_web_and_unknown_id() {
 }
 
 #[tokio::test]
+async fn operations_can_review_but_cannot_delete_screenings() {
+    let (hub, _ctx, _inner, _w) = setup().await;
+    collect(&hub, 1, "甲", &fresh()).await;
+    let operations = client(&hub, "operations");
+    assert_eq!(
+        operations.review(1, Level::Urgent).await.unwrap().level,
+        Some(Level::Urgent)
+    );
+    assert_eq!(
+        operations.delete(&[1]).await.unwrap_err().code,
+        ServiceError::FORBIDDEN
+    );
+    assert_eq!(row(&hub, 1).await["level"], "urgent");
+}
+
+#[tokio::test]
 async fn get_list_archived_before_and_delete() {
     let (hub, _ctx, _inner, _w) = setup().await;
     for id in 1..=3 {

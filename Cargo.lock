@@ -113,6 +113,7 @@ dependencies = [
  "llm",
  "maintenance",
  "okx-ann",
+ "operations",
  "plugin-sdk",
  "reqwest 0.12.28",
  "rss",
@@ -1202,7 +1203,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "app",
  "contracts",
@@ -3496,6 +3497,18 @@ name = "openssl-probe"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
+
+[[package]]
+name = "operations"
+version = "0.1.0"
+dependencies = [
+ "plugin-sdk",
+ "serde",
+ "serde_json",
+ "store",
+ "time",
+ "tokio",
+]
 
 [[package]]
 name = "option-ext"
@@ -6436,6 +6449,7 @@ dependencies = [
  "agent",
  "axum",
  "minijinja",
+ "operations",
  "plugin-sdk",
  "qrcode",
  "reqwest 0.12.28",

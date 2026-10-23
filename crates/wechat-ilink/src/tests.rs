@@ -304,6 +304,37 @@ async fn bind_and_status_forbidden_for_non_web() {
     assert!(env.server.received_requests().await.unwrap().is_empty());
 }
 
+#[tokio::test]
+async fn operations_can_bind_and_poll_without_exposing_credentials() {
+    let env = setup().await;
+    Mock::given(method("POST"))
+        .and(path("/ilink/bot/get_bot_qrcode"))
+        .respond_with(ok(
+            json!({"qrcode":"operations-qr","qrcode_img_content":"https://x/operations-qr"}),
+        ))
+        .mount(&env.server)
+        .await;
+    let result = call(&env, Caller::owner("operations"), "bind", json!({}))
+        .await
+        .unwrap();
+    assert_eq!(result["qrcode"], "https://x/operations-qr");
+    assert!(
+        call(&env, Caller::owner("operations"), "bind_status", json!({}))
+            .await
+            .is_ok()
+    );
+    let mut guest = Caller::owner("operations");
+    guest.user_id = "guest".into();
+    assert_eq!(
+        call(&env, guest, "bind_status", json!({}))
+            .await
+            .unwrap_err()
+            .code,
+        ServiceError::FORBIDDEN
+    );
+    assert_eq!(env.server.received_requests().await.unwrap().len(), 1);
+}
+
 // ------------------------------------------------------------ 收消息
 
 #[tokio::test]

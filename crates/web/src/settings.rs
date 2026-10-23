@@ -1219,6 +1219,7 @@ async fn push_rules(State(st): Shared, Form(f): Form<RulesForm>) -> Response {
 fn plugin_label(name: &str) -> (&str, &'static str) {
     match name {
         "agent" => ("追问", "msg"),
+        "operations" => ("应用操作", "tool"),
         "auth" => ("认证", "shield"),
         "binance-ann" => ("币安公告", "rss"),
         "collect" => ("采集调度", "rss"),

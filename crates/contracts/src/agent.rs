@@ -149,3 +149,18 @@ impl AgentClient {
         call_typed(&*self.0, "record_conversation_turn", turn).await
     }
 }
+
+/// Internal AI planning through the same Hub operation catalogue; never confirms writes.
+#[derive(Serialize, Deserialize)]
+pub struct OperateRequest {
+    pub session_id: i64,
+    pub request: AskRequest,
+}
+impl AgentClient {
+    pub async fn operate(
+        &self,
+        req: &OperateRequest,
+    ) -> Result<Option<serde_json::Value>, ServiceError> {
+        call_typed(&*self.0, "operate", req).await
+    }
+}
