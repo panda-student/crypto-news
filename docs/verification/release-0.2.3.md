@@ -38,3 +38,7 @@
 - SHA-256：`de47150c3d9f6d590699e4bf682487a358fd8c7e92341fcd4429478068c707dd`。
 - 同目录附带 `.sig`、`.sha256`、`latest.json`，继续使用既有 GitHub latest 自动更新地址。
 - [GitHub Release](https://github.com/panda-student/crypto-news/releases/tag/v0.2.3)。
+
+发布后已重新下载全部四个公开附件，逐字节与本地发行产物比对一致。使用真实 Tauri updater、正式配置的 latest 地址和公钥，以 0.2.2 版本检查更新，成功发现 0.2.3、下载并通过签名验证；下载内容与本地安装包一致。仅检查和下载，没有调用安装。
+
+发行源码提交为 `96b3225bbd860b8913f39d6f30504bf6c14a5317`。GitHub 的 [Windows release 检查](https://github.com/panda-student/crypto-news/actions/runs/39981467351) 已成功完成，执行格式、Clippy 和工作区测试，并保留已核验的签名发行附件。另已验证直接访问 `/settings#s-watch` 使用同一面板，关闭后返回首页。
