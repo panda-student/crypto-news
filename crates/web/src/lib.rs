@@ -150,6 +150,7 @@ pub(crate) fn business_routes(st: Arc<AppState>) -> Router {
         .route("/feed/new", get(feed::feed_new))
         .route("/stats", get(stats::stats_page))
         .route("/settings", get(stats::settings_page))
+        .route("/settings/panel", get(stats::settings_panel))
         .route("/api/v1/stats", get(stats::api_stats))
         .route(
             "/api/v1/prefs/watch_assets",
@@ -225,6 +226,10 @@ pub(crate) fn business_routes(st: Arc<AppState>) -> Router {
         .route(
             "/assets/mcp-ui.js",
             get(|| async { asset("text/javascript", include_str!("../assets/mcp-ui.js")) }),
+        )
+        .route(
+            "/assets/settings-ui.js",
+            get(|| async { asset("text/javascript", include_str!("../assets/settings-ui.js")) }),
         )
         .route(
             "/assets/watch-assets.js",
@@ -719,7 +724,7 @@ mod tests {
         assert!(!home.contains("id=\"first-run\""));
         let (s, b) = f.text("/settings").await;
         assert_eq!(s, 200);
-        assert!(b.contains("hx-get=\"/settings/push\""));
+        assert!(b.contains("data-settings-url=\"/settings/push\""));
     }
 
     #[tokio::test]

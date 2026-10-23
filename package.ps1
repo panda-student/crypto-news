@@ -93,7 +93,7 @@ Get-ChildItem -LiteralPath $releaseDirectory -Filter '*-setup.exe' -File |
     }
 $manifest = [ordered]@{
     version = $config.version
-    notes = '应用操作独立插件，内部 Agent 与外部 MCP 统一通过 Hub 调用；保留预览确认，优化插件依赖和状态提示。'
+    notes = '设置界面对齐最新原型：居中弹窗、分类导航、灰绿色卡片和系统开关；修复设置加载重试及配置同步。'
     pub_date = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
     platforms = @{ 'windows-x86_64' = @{
         signature = $signature

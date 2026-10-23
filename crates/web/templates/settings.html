@@ -1,47 +1,4 @@
 {% extends "base.html" %}
-{% from "settings_icons.html" import ic %}
 {% block title %}设置{% endblock %}
-{% block head %}<link rel="stylesheet" href="/assets/settings.css"><script defer src="/assets/watch-assets.js"></script>{% endblock %}
-{% block body %}
-<div class="sg">
-<div class="nav" id="setnav">
-<a class="back" href="/">{{ ic('back') }}返回</a>
-<a href="#s-llm" data-s="s-llm" class="on">{{ ic('cpu') }}模型服务</a>
-<a href="#s-src" data-s="s-src">{{ ic('rss') }}信源</a>
-<a href="#s-push" data-s="s-push">{{ ic('send') }}推送</a>
-<a href="#s-plg" data-s="s-plg">{{ ic('tool') }}插件</a>
-<a href="#s-net" data-s="s-net">{{ ic('world') }}网络</a>
-<a href="#s-sys" data-s="s-sys">{{ ic('desktop') }}系统</a>
-<a href="#s-watch" data-s="s-watch">{{ ic('filter') }}关注币种</a>
-<a href="#s-mcp" data-s="s-mcp">{{ ic('cpu') }}AI 与 MCP</a>
-</div>
-<div class="sc" id="setscroll">
-<h3 id="s-llm">模型服务</h3>
-<div id="sec-llm" hx-get="/settings/llm" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-src">信源</h3>
-<div id="sec-src" hx-get="/settings/sources" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-push">推送</h3>
-<div id="sec-push" hx-get="/settings/push" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-plg">插件</h3>
-<div id="sec-plg" hx-get="/settings/plugins" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-net">网络</h3>
-<div id="sec-net" hx-get="/settings/network" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-sys">系统</h3>
-<div id="sec-sys" hx-get="/settings/system" hx-trigger="load" hx-swap="innerHTML"></div>
-<h3 id="s-watch">关注币种</h3>
-<div class="cd watch-card" data-watch-editor="{{ watch }}">
-<div class="hd"><b>已关注 <span data-watch-count></span></b><span class="mu mini" data-watch-dirty></span></div>
-<div class="watch-list" data-watch-list></div>
-<form class="watch-add" data-watch-add><input aria-label="添加关注币种" placeholder="输入币种，如 DOGE、BNB" autocomplete="off"><button type="submit">添加关注</button></form>
-<p class="mu mini" data-watch-message role="status"></p><div class="watch-footer"><button type="button" data-watch-reset>撤销本轮修改</button><button type="button" class="primary watch-save" data-watch-save>保存关注</button></div>
-</div>
-<div style="height:40px"></div>
-<h3 id="s-mcp">AI 与 MCP</h3><div id="sec-mcp" hx-get="/settings/mcp" hx-trigger="load" hx-swap="innerHTML"></div>
-</div>
-</div>
-<script>
-(()=>{const nav=document.getElementById('setnav'),sc=document.getElementById('setscroll');if(!nav||!sc)return;const links=Array.from(nav.querySelectorAll('a[data-s]'));
-function go(id){if(!links.some(a=>a.dataset.s===id))id='s-llm';links.forEach(a=>{const on=a.dataset.s===id,h=document.getElementById(a.dataset.s);a.classList.toggle('on',on);a.setAttribute('aria-selected',String(on));if(h){h.hidden=!on;if(h.nextElementSibling)h.nextElementSibling.hidden=!on}});sc.scrollTop=0}
-links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();history.replaceState(null,'','#'+a.dataset.s);go(a.dataset.s)}));window.addEventListener('hashchange',()=>go(location.hash.slice(1)));go(location.hash.slice(1));})();
-</script>
-{% endblock %}
+{% block bodyclass %}settings-page{% endblock %}
+{% block body %}<div data-settings-page>{% include "settings_panel.html" %}</div>{% endblock %}

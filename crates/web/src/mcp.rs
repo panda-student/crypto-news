@@ -159,7 +159,7 @@ pub(crate) async fn settings(State(st): Shared) -> Response {
     let command = std::env::current_exe()
         .map(|p| p.to_string_lossy().into_owned())
         .unwrap_or_else(|_| "desktop.exe".into());
-    let config = serde_json::to_string_pretty(
+    let config = serde_json::to_string(
         &json!({"mcpServers":{"crypto-news":{"command":command,"args":["mcp"]}}}),
     )
     .unwrap_or_default();

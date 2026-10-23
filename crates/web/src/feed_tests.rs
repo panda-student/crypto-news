@@ -570,7 +570,7 @@ async fn stats_page_opens_without_screening() {
 }
 
 #[tokio::test]
-async fn settings_page_has_five_sections_and_old_pages_redirect() {
+async fn settings_page_shares_modal_panel_and_preserves_management_entries() {
     let f = std_fixture().await;
     let (s, b) = f.get("/settings").await;
     assert_eq!(s, 200);
@@ -581,9 +581,13 @@ async fn settings_page_has_five_sections_and_old_pages_redirect() {
         "/settings/plugins",
         "/settings/system",
     ] {
-        assert!(b.contains(&format!("hx-get=\"{l}\"")), "{l}");
+        assert!(b.contains(&format!("data-settings-url=\"{l}\"")), "{l}");
     }
-    assert!(b.contains("返回"));
+    assert!(b.contains("关闭设置"));
+    let (status, panel) = f.get("/settings/panel").await;
+    assert_eq!(status, 200);
+    assert!(panel.contains("data-settings-shell") && !panel.contains("<html"));
+    assert!(panel.contains("aria-controls=\"s-watch\""));
     // 旧的插件页、信源页并入设置页
     let r = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
@@ -612,6 +616,7 @@ async fn new_endpoints_denied_without_permission() {
         "/feed/new",
         "/stats",
         "/settings",
+        "/settings/panel",
         "/api/v1/dash",
         "/api/v1/chat/sessions",
         "/api/v1/chat/session/1",

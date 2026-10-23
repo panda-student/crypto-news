@@ -3,12 +3,12 @@
 {% if error %}<p class="note">{{ error }}</p>{% else %}
 <div class="grid">
 <form class="cd fm" hx-post="/settings/network/proxy" hx-target="#sec-net" hx-swap="innerHTML" autocomplete="off">
-<div class="hd">{{ ic('world') }}<b>网络代理</b></div>
+<div class="hd">{{ ic('world') }}<b>连接方式</b></div>
 <label class="chk"><input type="radio" name="mode" value="proxy"{% if proxy_url %} checked{% endif %}> 使用代理</label>
 <input name="url" value="{{ proxy_url }}" placeholder="http://127.0.0.1:7890" aria-label="代理地址">
 <label class="chk"><input type="radio" name="mode" value="direct"{% if not proxy_url %} checked{% endif %}> 直连</label>
 <div class="mu mini">所有外部请求都走这里的设置，保存后重启程序生效。</div>
-<div class="ft"><button type="submit" class="lk">保存</button><button type="button" class="lk" hx-post="/settings/network/proxy/test" hx-target="#t-proxy" hx-swap="innerHTML">测试连接</button><span id="t-proxy" class="mini"></span></div>
-</form>
+<div class="ft"><button type="button" hx-post="/settings/network/proxy/test" hx-target="#t-proxy" hx-swap="innerHTML">测试连接</button><span style="flex:1"></span><button type="submit" class="primary">保存网络设置</button></div>
+<p id="t-proxy" class="mini" role="status"></p></form>
 </div>
 {% endif %}

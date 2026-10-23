@@ -1,4 +1,4 @@
-/* 设置页：按原型 v15 的设置视图手写，变量映射到 app.css */
+/* Shared settings controls; v17 dialog layout and palette follow below. */
 .sg {
   --surface-1: var(--soft);
   --surface-2: var(--panel);
@@ -125,3 +125,75 @@
 .sg .channel-meter[data-stale="true"] progress::-webkit-progress-value{background:#9ba49e}
 .sg .channel-times{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:11px;color:var(--text-secondary)}.sg .channel-times span:nth-child(even){text-align:right;overflow-wrap:anywhere}
 .sg .queue-details{font-size:11px;line-height:1.7;margin-top:4px;color:var(--text-secondary)}.sg [data-quota-note]:empty{display:none}.sg [data-quota-note]{color:var(--text-warning);margin:5px 0 0}
+
+/* Approved v17 settings: one calm, centered surface, reused by every entry. */
+.settings-dialog{padding:0;margin:auto;width:min(1080px,calc(100vw - 32px));max-width:none;height:min(790px,calc(100dvh - 40px));max-height:none;border:1px solid #dce2d8;border-radius:14px;color:#29352e;background:#fafbf8;box-shadow:0 20px 80px #20302524;overflow:hidden}
+.settings-dialog::backdrop{background:#1d2b2459}.settings-dialog[open]{display:flex;flex-direction:column}
+.settings-shell{--fg:#29352e;--muted:#818b7b;--line:#e0e5dc;--panel:#fff;--soft:#f7f8f4;--accent:#466b59;--sel:#e9efe7;--bad:#ac5e48;--ok:#4f7257;--warn:#927f50;--surface-1:#f7f8f4;--surface-2:#fff;display:flex;flex-direction:column;width:100%;height:100%;min-height:0;text-align:left;font:13px/1.55 system-ui,"Microsoft YaHei",sans-serif;color:var(--fg);background:#fafbf8}
+.settings-shell *{box-sizing:border-box}.settings-shell [hidden]{display:none!important}
+.settings-shell button,.settings-shell input,.settings-shell select,.settings-shell textarea{font-family:inherit;font-size:12px;line-height:1.55}
+.settings-shell button{cursor:pointer;border:1px solid #dce2d7;background:#fff;color:#354334;padding:7px 11px;border-radius:7px;box-shadow:none}
+.settings-shell button:hover{background:#f3f6ef}.settings-shell button:disabled{opacity:.4;cursor:default}
+.settings-shell :focus-visible{outline:2px solid #758e70;outline-offset:3px}
+.settings-head{display:flex;align-items:center;gap:10px;min-height:68px;padding:17px 22px;border-bottom:1px solid #e2e6de;background:#fff;flex:none}
+.settings-head h2{font:600 16px/1.55 system-ui,"Microsoft YaHei",sans-serif;margin:0;flex:1}
+.settings-head button{border:0;background:transparent;font-size:21px;padding:0 5px;color:#7b8579}
+.settings-shell .sg{--surface-1:var(--soft);--surface-2:var(--panel);--border:var(--line);--border-strong:#c6d3c1;--text-accent:#58715b;--text-secondary:#818b7b;--text-primary:var(--fg);--text-muted:#879080;--bg-success:#edf3eb;--bg-accent:#e9efe7;--text-success:#4f7257;--bg-danger:#fcf1ed;--text-danger:#ac5e48;--bg-warning:#f7f3e8;--text-warning:#927f50;grid-template-columns:132px minmax(0,1fr);flex:1;min-height:0;height:auto;border:0;border-radius:0;font-size:13px;background:#fafbf8}
+.settings-shell .sg .nav{padding:15px 9px;border-right:1px solid #e2e6de;background:#f7f8f4;display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.settings-shell .sg .nav a{border:0;color:#758071;padding:9px 12px;font-size:12px;border-radius:7px;line-height:1.55}
+.settings-shell .sg .nav .on{background:#e9efe7;color:#3f6148;font-weight:600}
+.settings-nav-group{font-size:10px;color:#9ca494;border-top:1px solid #e2e6de;margin-top:10px;padding:14px 12px 3px}
+.settings-shell .sg .sc{min-width:0;overflow:auto;padding:22px;scroll-behavior:auto;scrollbar-gutter:auto}
+.settings-shell .sg .sc h3{font-size:15px;font-weight:600;line-height:1.55;margin:0 0 5px;color:#29352e}
+.settings-sub{font-size:11px;color:#879080;margin:0 0 18px;line-height:1.55}
+.settings-shell .sg .cd{padding:18px;border:1px solid #e0e5dc;background:#fff;border-radius:10px;gap:9px}
+.settings-shell .sg .cd.def{border:1px solid #8eaa87;box-shadow:0 0 0 1px #8eaa8733}
+.settings-shell .sg .hd{gap:9px;align-items:center}.settings-shell .sg .hd b{font-size:13px;font-weight:600}
+.settings-shell .sg .mu{color:#818b7b}.settings-shell .sg .mini{font-size:11px}
+.settings-shell .sg .primary{background:#466b59;color:#fff;border-color:#466b59;padding:7px 11px;border-radius:7px}
+.settings-shell .sg .primary:hover{background:#395c49;border-color:#395c49}
+.settings-shell .sg a,.settings-shell .sg .lk{color:#58715b}
+.settings-shell .sg .lk{background:transparent;border:0;padding:0;border-radius:3px;font-size:11px}
+.settings-shell .sg .lk.danger{color:#a78376}.settings-shell .sg .ft{padding-top:12px;margin-top:7px;gap:12px;line-height:1.55}
+.settings-shell .sg input:not([type=checkbox]):not([type=radio]),.settings-shell .sg select,.settings-shell .sg textarea{border:1px solid #dce2d7;border-radius:7px;padding:8px 11px;background:#fff;color:#354334;min-height:36px;min-width:0;box-shadow:none}
+.settings-shell .sg input[type=checkbox],.settings-shell .sg input[type=radio]{accent-color:#5c7e62}
+.settings-shell .sg .bd{font-size:10px;padding:2px 6px;border:1px solid #e0e2da;background:#f0f1ed;border-radius:5px;color:#818b7b;line-height:1.5}
+.settings-shell .sg .bd.ok{background:#edf3eb;border-color:#d8e4d3;color:#4f7257}.settings-shell .sg .bd.bad{background:#fcf1ed;border-color:#eddbd3;color:#ac5e48}
+.settings-shell .sg .sw{width:30px;height:17px;border-radius:9px;background:#c9d1c3;padding:0;border:0}.settings-shell .sg .sw:after{width:13px;height:13px;left:2px;top:2px}.settings-shell .sg .sw.on{background:#5c7e62}.settings-shell .sg .sw.on:after{left:15px}
+.settings-shell .sg .grid{gap:12px;align-items:start}.settings-shell .sg .sources-grid{grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
+.settings-shell .sg .source-summary{color:#6d7a66;margin:0 0 18px;font-size:11px;line-height:1.7}
+.settings-shell .sg .x-panel{grid-column:1/-1;gap:0}.settings-shell .sg .x-panel .hd{gap:9px}.settings-shell .sg .x-panel>.mu{margin-top:8px}
+.settings-shell .sg .x-login{font-size:11px;padding:5px 8px}.settings-shell .sg .x-toolbar{margin:15px 0 12px;gap:10px}.settings-shell .sg .x-toolbar>input{max-width:260px}
+.settings-shell .sg .x-accounts{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:7px;padding:0 3px 0 0}
+.settings-shell .sg .x-account{padding:10px;gap:8px;background:#fafbf8;border-color:#e4e8df;min-height:53px}.settings-shell .sg .x-account-info{display:flex;flex-direction:column;align-items:flex-start;gap:2px}.settings-shell .sg .x-handle{font-size:11px;font-weight:600}.settings-shell .sg .x-account .bd{background:transparent;border:0;padding:0;color:#7c8c72;font-size:10px}
+.settings-shell .sg .x-actions{gap:6px}.settings-shell .sg .x-actions button{font-size:10px;padding:4px 2px}
+.settings-shell .sg .watch-card{gap:0;margin-bottom:15px}.settings-shell .sg .watch-list{margin:16px 0 21px;min-height:42px}
+.settings-shell .sg .watch-coin{padding:8px 7px 8px 13px;font-size:13px;line-height:20px;border:1px solid #dce5d8;background:#f1f5ee;border-radius:8px;color:#41634b;gap:16px}
+.settings-shell .sg .watch-coin button{font-size:17px;line-height:20px;padding:1px 6px;border:0;background:transparent;color:#8b9a84}
+.settings-shell .sg .watch-add{gap:8px;align-items:center}.settings-shell .sg .watch-add input{height:36px;min-height:36px;flex:1}
+.settings-shell .sg .watch-add button{white-space:nowrap;background:#eef3ea;border:1px solid #c6d3c1;color:#466343;padding:7px 13px}
+.settings-shell .sg .watch-message{min-height:18px;font-size:11px;margin:9px 0 0}
+.settings-shell .sg .watch-footer{margin-top:18px;align-items:center;gap:9px}.settings-shell .sg .watch-footer .watch-save{background:#466b59;border-color:#466b59}
+.settings-shell .settings-try-ai{font-size:12px;background:white;padding:7px 11px}
+.settings-shell #s-net .grid,.settings-shell #s-sys .grid{grid-template-columns:minmax(0,1fr)}
+.settings-shell .settings-row{display:flex!important;align-items:center;gap:14px;padding:14px 0;margin:0!important;border-bottom:1px solid #edf0e8;color:#29352e!important}
+.settings-row:last-child{border-bottom:0}.settings-row>span{flex:1}.settings-row b{font-size:12px;font-weight:500}.settings-row small{display:block;font-size:11px;color:#85917d;margin-top:3px}
+.settings-shell .sg .settings-toggle{appearance:none;position:relative;width:30px;height:17px;min-width:30px;border:0;border-radius:9px;padding:0;background:#c9d1c3;cursor:pointer;flex:none;margin:0}
+.settings-toggle:after{content:'';position:absolute;left:2px;top:2px;width:13px;height:13px;background:white;border-radius:50%;box-shadow:0 1px 2px #0001}.settings-shell .sg .settings-toggle:checked{background:#5c7e62}.settings-toggle:checked:after{left:15px}
+.settings-shell .mcp-config{padding:12px 14px;background:#f4f6f0;border:1px solid #e3e8dd;border-radius:7px;font-size:11px;color:#5f7055;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;margin:9px 0}
+.settings-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}.settings-tool-grid span{padding:9px 10px;background:#f7f9f4;border-radius:6px;color:#708363;font-size:11px}
+.settings-shell .operation-plan{padding:14px 16px;border:1px solid #dbe4d3;border-radius:10px;background:#f7faf3;margin:14px 0;color:#4e6244;font-size:12px}
+.settings-shell .operation-plan pre{background:#f4f6f0;color:#5f7055;border-color:#e3e8dd;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}
+.settings-mcp-card{margin-bottom:15px}.settings-loading{padding:24px;font:13px/1.55 system-ui,"Microsoft YaHei",sans-serif;color:#6d7a66}
+body.settings-page{background:#edf0e9}body.settings-page>header{display:none}body.settings-page>main{max-width:none;margin:0;padding:20px 16px;height:100dvh;display:grid;place-items:center}
+[data-settings-page]{width:min(1080px,100%);height:min(790px,calc(100dvh - 40px));border:1px solid #dce2d8;border-radius:14px;overflow:hidden;box-shadow:0 20px 80px #20302524}
+@media(max-width:650px){.settings-dialog{width:calc(100vw - 16px);height:calc(100dvh - 20px)}.settings-shell .sg{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.settings-shell .sg .nav{flex-direction:row;overflow:auto;padding:8px;border-right:0;border-bottom:1px solid #e2e6de;gap:3px}.settings-shell .sg .nav a{width:auto;white-space:nowrap;padding:7px 9px}.settings-nav-group{display:none}.settings-head{padding:13px 15px;min-height:54px}.settings-shell .sg .sc{padding:15px}.settings-shell .sg .cd{padding:14px}.settings-shell .sg .x-add{flex-basis:100%}.settings-shell .sg .x-toolbar>input{max-width:none;flex-basis:100%}.settings-tool-grid{grid-template-columns:1fr}.settings-shell .sg .watch-add{flex-wrap:wrap}.settings-shell .sg .watch-add input{flex-basis:65%}}
+
+.settings-scroll-note{font-size:10px;text-align:center;color:#819076;margin-top:7px}
+
+.settings-shell .sg .cd p{margin:0}
+.settings-shell .sg .watch-card .watch-message{margin:9px 0 0}
+.settings-shell #t-proxy:empty{display:none}
+
+.settings-shell .sg .sources-grid>.cd:not(.x-panel) .hd b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.settings-shell .sg .sources-grid>.cd:not(.x-panel)>.mu{overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:34px}

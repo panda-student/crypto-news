@@ -1,7 +1,7 @@
 [package]
 license = "Apache-2.0"
 name = "desktop"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 publish = false
 description = "桌面外壳：Tauri 2 窗口、托盘、开机自启，进程内启动核心服务"

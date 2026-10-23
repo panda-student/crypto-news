@@ -30,6 +30,10 @@ use crate::{check, err_response, pages, render, AppState, Shared};
 
 pub(crate) const TEMPLATES: &[(&str, &str)] = &[
     (
+        "settings_panel.html",
+        include_str!("../templates/settings_panel.html"),
+    ),
+    (
         "settings_mcp.html",
         include_str!("../templates/settings_mcp.html"),
     ),
@@ -2124,10 +2128,10 @@ mod tests {
     async fn system_proxy_and_desktop_options() {
         let f = fx(true, Value::Null, None).await;
         let (_, network) = f.get("/settings/network").await;
-        assert!(network.contains("网络代理") && !network.contains("开机自启"));
+        assert!(network.contains("连接方式") && !network.contains("开机自启"));
         assert!(network.contains("hx-target=\"#sec-net\""));
         let (_, system) = f.get("/settings/system").await;
-        assert!(system.contains("开机自启") && !system.contains("网络代理"));
+        assert!(system.contains("开机自启") && !system.contains("连接方式"));
         let (_, shell) = f.get("/settings").await;
         assert!(shell.contains("id=\"s-net\"") && shell.contains("id=\"s-sys\""));
         assert!(!shell.contains("网络与系统"));

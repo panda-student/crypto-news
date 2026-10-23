@@ -240,6 +240,15 @@ pub(crate) async fn settings_page(State(st): Shared) -> Response {
     )
 }
 
+/// Same functional settings panel used by the home dialog and standalone route.
+pub(crate) async fn settings_panel(State(st): Shared) -> Response {
+    if let Some(r) = check(&st, "web.view").await {
+        return r;
+    }
+    let watch = db(&st).watch_assets().await.join(",");
+    render("settings_panel.html", minijinja::context! { watch=>watch })
+}
+
 pub(crate) async fn api_watch_get(State(st): Shared) -> Response {
     if let Some(r) = check(&st, "web.view").await {
         return r;

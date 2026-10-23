@@ -1,0 +1,24 @@
+<div class="settings-shell" data-settings-shell>
+<div class="settings-head"><h2 id="settings-title">设置</h2><button type="button" data-settings-close aria-label="关闭设置">×</button></div>
+<div class="sg"><nav class="nav" id="setnav" role="tablist" aria-label="设置分类"><a href="#s-src" data-s="s-src" id="tab-s-src" role="tab" aria-controls="s-src" aria-selected="false">信源</a><a href="#s-watch" data-s="s-watch" id="tab-s-watch" role="tab" aria-controls="s-watch" aria-selected="true">关注币种</a><a href="#s-net" data-s="s-net" id="tab-s-net" role="tab" aria-controls="s-net" aria-selected="false">网络</a><a href="#s-sys" data-s="s-sys" id="tab-s-sys" role="tab" aria-controls="s-sys" aria-selected="false">系统</a><a href="#s-mcp" data-s="s-mcp" id="tab-s-mcp" role="tab" aria-controls="s-mcp" aria-selected="false">AI 与 MCP</a><span class="settings-nav-group">更多设置</span><a href="#s-llm" data-s="s-llm" id="tab-s-llm" role="tab" aria-controls="s-llm" aria-selected="false">模型服务</a><a href="#s-push" data-s="s-push" id="tab-s-push" role="tab" aria-controls="s-push" aria-selected="false">推送</a><a href="#s-plg" data-s="s-plg" id="tab-s-plg" role="tab" aria-controls="s-plg" aria-selected="false">插件</a></nav><div class="sc" id="setscroll"><section id="s-src" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-src" hidden><h3>信源</h3><p class="settings-sub">订阅、公告与 X 账号，统一查看采集状态。</p>
+<div id="sec-src" data-settings-url="/settings/sources" hx-swap="innerHTML"></div>
+</section><section id="s-watch" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-watch"><h3>关注币种</h3><p class="settings-sub">已关注的币种始终显示在这里，可直接移除或添加。</p>
+<div class="cd watch-card" data-watch-editor="{{ watch }}">
+<div class="hd"><b>已关注 <span data-watch-count></span></b><span class="mu mini" data-watch-dirty></span></div>
+<div class="watch-list" data-watch-list></div>
+<form class="watch-add" data-watch-add><input aria-label="添加关注币种" placeholder="输入币种，如 DOGE、BNB" autocomplete="off"><button type="submit">添加关注</button></form>
+<p class="mu mini watch-message" data-watch-message role="status"></p><div class="watch-footer"><button type="button" data-watch-reset>撤销本轮修改</button><button type="button" class="primary watch-save" data-watch-save>保存关注</button></div>
+</div>
+
+<button type="button" class="settings-try-ai" data-settings-question="关注 DOGE">试试通过对话说“关注 DOGE” →</button></section><section id="s-net" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-net" hidden><h3>网络</h3><p class="settings-sub">管理所有外部请求的连接方式。</p>
+<div id="sec-net" data-settings-url="/settings/network" hx-swap="innerHTML"></div>
+</section><section id="s-sys" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-sys" hidden><h3>系统</h3><p class="settings-sub">应用运行行为与版本更新。</p>
+<div id="sec-sys" data-settings-url="/settings/system" hx-swap="innerHTML"></div>
+</section><section id="s-mcp" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-mcp" hidden><h3>AI 与 MCP</h3><p class="settings-sub">应用内 AI 与外部 MCP 客户端使用同一套工具与业务规则。</p><div id="sec-mcp" data-settings-url="/settings/mcp" hx-swap="innerHTML"></div>
+</section><section id="s-llm" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-llm" hidden><h3>模型服务</h3><p class="settings-sub">管理模型服务、用途分配和调用用量。</p>
+<div id="sec-llm" data-settings-url="/settings/llm" hx-swap="innerHTML"></div>
+</section><section id="s-push" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-push" hidden><h3>推送</h3><p class="settings-sub">管理发送队列、推送渠道和可用额度。</p>
+<div id="sec-push" data-settings-url="/settings/push" hx-swap="innerHTML"></div>
+</section><section id="s-plg" class="settings-pane" role="tabpanel" aria-labelledby="tab-s-plg" hidden><h3>插件</h3><p class="settings-sub">查看各项能力的运行状态，直接开启、关闭或配置。</p>
+<div id="sec-plg" data-settings-url="/settings/plugins" hx-swap="innerHTML"></div>
+</section></div></div></div>

@@ -256,8 +256,11 @@ fn setup_tray(handle: &AppHandle) -> tauri::Result<()> {
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.first().is_some_and(|a| a == "mcp") {
-        let rt = tokio::runtime::Runtime::new().expect("创建MCP运行时");
+    if args
+        .first()
+        .is_some_and(|a| matches!(a.as_str(), "mcp" | "serve"))
+    {
+        let rt = tokio::runtime::Runtime::new().expect("创建命令行运行时");
         std::process::exit(rt.block_on(app::run(&args)));
     }
     let hidden = logic::has_hidden(std::env::args());

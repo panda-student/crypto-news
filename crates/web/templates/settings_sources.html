@@ -28,6 +28,7 @@
 <button type="button" class="lk danger" aria-label="删除X账号 @{{ a.handle }}" hx-post="/settings/x/{{ a.eh }}/delete" hx-target="#sec-src" hx-swap="innerHTML" hx-confirm="取消关注 @{{ a.handle }}？" hx-disabled-elt="this">删除</button></span></div>
 {% endfor %}
 </div>
+<div class="settings-scroll-note" data-x-scroll-hint hidden>还有账号，向下滚动 ↓</div>
 <p class="mu mini x-empty" data-x-empty hidden>没有匹配的账号，试试其他关键词。</p>
 {% if not x.accounts %}<p class="mu">还没有关注账号，在上方添加即可开始采集。</p>{% endif %}
 </div>
